@@ -30,6 +30,7 @@ df_cfd = pd.read_excel('C:/Personal/Lingemann/LNG/input/Comenzi furnizori deschi
 df_ccf = pd.read_excel('C:\Personal\Lingemann\LNG\input\Confirmari comenzi furnizori.xlsx', skiprows=1, skipfooter=1)
 df_stock = pd.read_excel('C:\Personal\Lingemann\LNG\input\Stock value_RO.xlsx', skiprows=1, skipfooter=1)
 df_stocmin = pd.read_excel('C:\Personal\Lingemann\LNG\input\Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1)
+df_ka = pd.read_excel('C:/Personal/Lingemann/LNG/input/Clienti - KA.xlsx')
 print(os.listdir())
 st.title("LNG Dashboard")
 
@@ -178,13 +179,12 @@ df_cfi['Zile intarziere'] = (df_cfi['Zi referinta']-df_cfi['Data livrare']).appl
 
 # join cu df_cco pt Data livrare('Cel mai vechi termen de livrare catre client') si NumeF('Client') dupa Legatura (CC) cu Legatura Depozit 
 df_cfim1 = df_cfi.join(df_cco.set_index('Legatura CC'), on=['Legatura depozit'], how='left', rsuffix='_df_cco')
-
 # join cu df_stocuriMinime pt Stoc minim('Stoc Minim') dupa Legatura (SM) cu Legatura Depozit  
 df_cfim2 = df_cfim1.join(df_StocuriMinime.set_index('Legatura'), on=['Legatura depozit'], how='left', rsuffix='_df_sm')
 
 #drop excessive columns
 # 'Legatura', 'Grupa client', 'Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel_df_cco', 'Text produs', 'Tip comanda client', 'Depozit_df_cco', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare_df_cco', 'Cantitate pozitie_df_cco', 'Cantitate livrata', 'Cantitate restanta_df_cco', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Dtaa inregistrare_df_cco', 'Cod curs valutar', 'Livrare partiala permisa 1=DA', 'Unitate masura_df_cco','Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact', 'Depozit_df_sm', 'Cod produs', 'Label', 'Descriere produs_df_sm', 'UM', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal', 'Medie zilnica an curent', 'Medie lunara an curent', 'Medie lunara an precedent'
-df_cfim2.drop(['Grupa client', 'Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel_df_cco', 'Text produs', 'Tip comanda client', 'Depozit_df_cco', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Cantitate pozitie_df_cco', 'Cantitate livrata', 'Cantitate restanta_df_cco', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare_df_cco', 'Cod curs valutar', 'Livrare partiala permisa 1=DA', 'Unitate masura_df_cco','Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact', 'Depozit_df_sm', 'Cod produs', 'Label', 'Descriere produs_df_sm', 'UM', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal', 'Medie zilnica an curent', 'Medie lunara an curent', 'Medie lunara an precedent'], axis=1, inplace=True)
+df_cfim2.drop(['Grupa client', 'Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel_df_cco', 'Text produs', 'Tip comanda client', 'Depozit_df_cco', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Cantitate pozitie_df_cco', 'Cantitate livrata', 'Cantitate restanta_df_cco', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Cod curs valutar', 'Livrare partiala permisa 1=DA', 'Unitate masura_df_cco','Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact', 'Depozit_df_sm', 'Cod produs', 'Label', 'Descriere produs_df_sm', 'UM', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal', 'Medie zilnica an curent', 'Medie lunara an curent', 'Medie lunara an precedent'], axis=1, inplace=True)
 
 #rename columns 
 # Adresa 1 -> Furnizor
@@ -196,7 +196,7 @@ df_cfim2.drop(['Grupa client', 'Cod client', 'Numar intern comanda client', 'Num
 # Unitate masura -> UM
 # Data ingregistrare -> Data comenzii
 # Cantitate pozitie -> Cantitate comanda
-df_cfim2.rename(columns={'Adresa 1':'Furnizor', 'Numar intern comanda client.1':'Nr comanda', 'Numar pozitie.1':'Pozitie', 'Lieferartikel':'Cod Lingemann', 'Furnizori / produs':'Cod Furnizori / produs', 'Descriere produs':'Denumire produs', 'Unitate masura':'UM', 'Data ingregistrare':'Data comenzii', 'Data livrare_df_cco':'Cel mai vechi termen de livrare catre client', 'Cantitate pozitie':'Cantitate comanda', 'NumeF':'Client'}, inplace=True)
+df_cfim2.rename(columns={'Adresa 1':'Furnizor', 'Numar intern comanda client.1':'Nr comanda', 'Numar pozitie.1':'Pozitie', 'Lieferartikel':'Cod Lingemann', 'Furnizori / produs':'Cod Furnizori / produs', 'Descriere produs':'Denumire produs', 'Unitate masura':'UM', 'Data inregistrare_df_cco': 'Data comenzii', 'Data livrare_df_cco':'Cel mai vechi termen de livrare catre client', 'Cantitate pozitie':'Cantitate comanda', 'NumeF':'Client'}, inplace=True)
 
 #fill N/A values with corresponding words on added columns 
 df_cfim2.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
@@ -242,6 +242,8 @@ for index in range(len(df_cfcc1)):
                 df_cfcc1['Status'].iloc[index] = "FARA CONFIRMARE"
 #df_cfcc1.fillna(value={'Status': "FARA CONFIRMARE"}, inplace=True)
 #df_cfcc1['Status'] = np.where(df_cfcc1['Status']>pd.to_datetime("1900-01-01"), pd.to_datetime(df_cfcc1['Status']), 'FARA CONFIRMARE')
+df_cfcc1['Data Confirmare CF'] = df_cfcc1['Status']
+#df_cfcc1['Data Comenzii'] = df_cfcc['Data comenzii']
 df_cfcc1.sort_values(by=['Data inregistrare'], inplace=True)
 st.dataframe(df_cfcc1)
 
@@ -251,3 +253,58 @@ pivot_cf.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 pivot_cf.loc["GRAND TOTAL"] = [pivot_cf['Cantitate restanta'].sum(), pivot_cf['Nr comanda'].sum()]
 st.dataframe(pivot_cf)
 
+st.header("Lucru CC - !De gasit un nume mai destept!")
+df_lcc = df_cco.copy()
+df_lcc['Zi referinta'] = pd.to_datetime(today)
+df_lcc['Legatura depozit'] = df_lcc['Depozit'].str.strip()+df_lcc['Lieferartikel'].str.strip()
+df_lcc['KW livrare'] = pd.to_datetime(df_lcc['Data livrare']).apply(lambda x: x.isocalendar().week)
+df_lcc['Year livrare'] = pd.to_datetime(df_lcc['Data livrare']).apply(lambda x: x.year)
+df_lcc['Zile intarziere'] = (df_lcc['Zi referinta']-df_lcc['Data livrare']).apply(lambda x: x.days)
+df_lcc['Currency'] = df_lcc['Cod curs valutar']
+df_lcc['TIP TL'] = np.where(df_lcc['Cod termen livrare']=="B", "APROXIMATIV","FIX")
+
+df_lcc1 = df_lcc.join(df_cfcc1.set_index('Legatura depozit'), on=['Legatura depozit'], how='left', rsuffix='_df_cfcc1')
+#replace Currency RON for empty values
+df_lcc1.fillna(value={'Currency': "RON"}, inplace=True)
+df_lcc1.fillna(value={'Furnizor': ""}, inplace=True)
+# fill new column "RESTRICTII"
+conditionsl = [
+    df_lcc1['Validare comanda client'] == "N",
+    df_lcc1['Validare generare dispozitie livrare'] == "N",
+    np.isclose(df_lcc1['Livrare partiala permisa 1=DA'].round(1), 0.0)
+]
+#define results
+resultsl = ['ORDER RELEASE: NO', 'KOMMFREIGABE: NEIN', 'COMANDA SE LIVREAZA INTEGRAL']
+
+#create new column based on conditions in column1 and column2
+df_lcc1['RESTRICTII'] = np.select(conditionsl, resultsl)
+df_lcc1.fillna(value={'RESTRICTII': "FARA RESTRICTII"}, inplace=True)
+df_lcc1.fillna(value={'Status Comanda': "INTARZIATE"}, inplace=True)
+
+df_lcc1['Cea mai veche CF'] = df_lcc1['Data comenzii']
+df_lcc1.fillna(value={'Cea mai veche CF': "FARA CF"}, inplace=True)
+#df_lcc1['Data confirmare CF'] = df_lcc1['Status']
+df_lcc1.fillna(value={'Data Confirmare CF': ""}, inplace=True)
+df_lcc1['Data livrare CF'] = df_lcc1['Data livrare']
+df_lcc1.fillna(value={'Data livrare': ""}, inplace=True)
+#rename columns
+df_lcc1.drop(['Legatura CC', 'Currency', 'TIP TL', 'Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'Data inregistrare_df_cfcc1', 'Cantitate comanda', 'Cantitate restanta_df_cfcc1', 'Depozit_df_cfcc1', 'Data livrare_df_cfcc1', 'Adresa e-mail', 'Legatura', 'Zi referinta_df_cfcc1', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Zile intarziere_df_cfcc1', 'Cel mai vechi termen de livrare catre client', 'Data comenzii', 'Client', 'Stoc minim', 'Cod PIO', 'Legatura CF', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status'], axis=1, inplace=True)
+df_lcc1.rename(columns={'Grupa client':'Grup', 'NumeF':'Nume client', 'Numar intern comanda client':'Nr. intern CC', 'Lieferartikel':'Cod produs', 'Text produs':'Denumire', 'Validare generare dispozitie livrare':'Se pot emite DL', 'Validare comanda client':'Order Release', 'Cod termen livrare':'Termen de livrare', 'Cantitate pozitie':'Cantitate comanda', 'Reprezentant principal':'Key Account', 'Data inregistrare':'Data creere', 'Cod curs valutar':'Moneda', 'Nr. comanda client':'NR. extern CC', '':''}, inplace=True)
+#drop columns
+df_lcc2 = df_lcc1.join(df_ka.set_index('Client'), on=['Nume client'], how='left', rsuffix='_df_cfcc1')
+df_lcc2.drop(['Grup_df_cfcc1'], axis=1, inplace=True)
+df_lcc2.sort_values(by=['Zile intarziere'], ascending=False, inplace=True)
+st.dataframe(df_lcc2)
+
+st.header("Status CC de copiat - !De gasit un nume mai destept! - se copiaza acum in excel in output folder")
+#pivot_statcc = df_lcc2.pivot_table(index =['KA'], columns=['Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'UM', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], 
+#aggfunc = np.sum, margins=False, margins_name='GRAND TOTAL')
+#pivot_statcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
+#pivot_statcc.loc["GRAND TOTAL"] = [pivot_cf['Cantitate restanta'].sum(), pivot_cf['Valoare restanta'].sum()]
+#st.dataframe(pivot_statcc)
+groupedcc = df_lcc2.groupby(['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'UM', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor']).aggregate({'Cantitate restanta':'sum', 'Valoare restanta':'sum'})
+groupedcc.to_excel("C:/Personal/Lingemann/LNG/output/GroupBy Test.xlsx")
+#incearca sa-i faci afisare in tabele mai destepte
+
+
+st.header("Verificare SM de copiat")
