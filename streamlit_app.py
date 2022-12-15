@@ -221,6 +221,9 @@ df_cfim2['Status comanda'] = np.select(conditions, results)
 df_cfim2.fillna(value={'Status comanda': "IN TERMEN"}, inplace=True)
 
 st.dataframe(df_cfim2)
+df_cfim2.sort_values(by=['Status comanda'], inplace=True)
+df_cfim2.to_excel('C:/Personal/Lingemann/LNG/output/Comenzi furnizori - completa.xlsx')
+
 
 st.header("Pt. CC O2N si situatie CF ordonat dupa data comenzii")
 df_cfcc = df_cfim2.copy()
@@ -312,6 +315,7 @@ st.header("Status CC de copiat - !De gasit un nume mai destept! - se copiaza acu
 groupedcc = df_lcc2.groupby(['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'UM', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor']).aggregate({'Cantitate restanta':'sum', 'Valoare restanta':'sum'})
 groupedcc.to_excel("C:/Personal/Lingemann/LNG/output/GroupBy Test.xlsx")
 #incearca sa-i faci afisare in tabele mai destepte
+st.table(groupedcc)
 
 
 st.header("Verificare SM de copiat")
@@ -381,3 +385,11 @@ for index in range(len(df_smc4)):
 
 
 st.dataframe(df_smc4)
+df_smc4.sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
+df_smc4.to_excel("C:/Personal/Lingemann/LNG/output/Situatie SM final.xlsx")
+
+
+st.header("Centralizator comenzi clienti - copiat in excel")
+pivot_centralizator = groupedcc.groupby(['Cod client', 'Nume client', 'Status comanda']).aggregate({'Valoare restanta':'sum'})
+pivot_centralizator.to_excel("C:/Personal/Lingemann/LNG/output/Status comenzi clienti Centralizator.xlsx")
+st.table(pivot_centralizator)
