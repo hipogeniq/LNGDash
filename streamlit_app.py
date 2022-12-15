@@ -147,6 +147,10 @@ pivot_cc = df_cco.pivot_table(index =['Legatura CC'], values =['Cantitate restan
 pivot_cc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 pivot_cc.loc["GRAND TOTAL"] = pivot_cc['Cantitate restanta'].sum()
 st.dataframe(pivot_cc)
+pivot_cc.to_excel("C:/Personal/Lingemann/LNG/output/Pivot CC pt SM.xlsx")
+# ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
+pcc=pd.read_excel('C:/Personal/Lingemann/LNG/output/Pivot CC pt SM.xlsx')
+
 
 st.header("Confirmari Comenzi Furnizori")
 df_ccf2 = df_ccfModified.copy()
@@ -252,6 +256,9 @@ pivot_cf = df_cfcc1.pivot_table(index =['Legatura depozit'],aggfunc ={'Nr comand
 pivot_cf.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 pivot_cf.loc["GRAND TOTAL"] = [pivot_cf['Cantitate restanta'].sum(), pivot_cf['Nr comanda'].sum()]
 st.dataframe(pivot_cf)
+pivot_cf.to_excel("C:/Personal/Lingemann/LNG/output/Pivot CF pt SM.xlsx")
+# ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
+pcf=pd.read_excel('C:/Personal/Lingemann/LNG/output/Pivot CF pt SM.xlsx')
 
 st.header("Lucru CC - !De gasit un nume mai destept!")
 df_lcc = df_cco.copy()
@@ -308,3 +315,69 @@ groupedcc.to_excel("C:/Personal/Lingemann/LNG/output/GroupBy Test.xlsx")
 
 
 st.header("Verificare SM de copiat")
+df_smc = df_StocuriMinime.copy()
+df_smc.drop(['Label', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal'], axis=1, inplace=True)
+df_smc.rename(columns={'Cod produs':'Cod PIO', 'Stoc minim':'Stoc minim / depozit'}, inplace=True)
+
+df_smc1=df_smc.join(df_cfcc1.set_index('Legatura depozit'), on=['Legatura'], how='left', rsuffix='_df_cfcc1')
+df_smc1.drop(['Nr comanda', 'Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM_df_cfcc1', 'Data inregistrare', 'Cantitate comanda', 'Cantitate restanta', 
+'Depozit_df_cfcc1', 'Adresa e-mail', 'Legatura_df_cfcc1', 'Zi referinta', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Zile intarziere', 'Cel mai vechi termen de livrare catre client', 
+'Client', 'Stoc minim', 'Status comanda', 'Cod PIO_df_cfcc1', 'Legatura CF', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Data Confirmare CF'], axis=1, inplace=True)
+df_smc1.fillna(value={'Data comenzii': ""}, inplace=True)
+df_smc1.fillna(value={'Status': ""}, inplace=True)
+df_smc1.fillna(value={'Data livrare': ""}, inplace=True)
+df_smc1.fillna(value={'Furnizor': ""}, inplace=True)
+df_smc1.rename(columns={'Data comenzii':'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC', 'Status':'Data confirmare cea mai veche CF - din lucru supplier - status pt. CC', 'Data livrare':'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC', 'Furnizor':'Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'}, inplace=True)
+
+#join cu pivot
+df_smc2=df_smc1.join(pcc.set_index('Legatura CC'), on=['Legatura'], how='left', rsuffix='_pcc')
+df_smc2.fillna(value={'Cantitate restanta': 0}, inplace=True)
+df_smc2.rename(columns={'Cantitate restanta':'Cant deschisa in CC - din CC deschise'}, inplace=True)
+
+df_smc3=df_smc2.join(pcf.set_index('Legatura depozit'), on=['Legatura'], how='left', rsuffix='_pcf')
+df_smc3.fillna(value={'Cantitate restanta': 0}, inplace=True)
+df_smc3.rename(columns={'Cantitate restanta':'Cantitate in CF - din CF deschise'}, inplace=True)
+df_smc3.fillna(value={'Nr comanda': ""}, inplace=True)
+df_smc3.rename(columns={'Nr comanda':'Numar CF deschise - din CF deschise'}, inplace=True)
+
+df_smc4=df_smc3.join(df_StocActual.set_index('Legatura'), on=['Legatura'], how='left', rsuffix='_pcf')
+df_smc4.drop(['Depozit_pcf', 'Cod produs', 'Descriere', 'UM_pcf', 'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti','Cantitate in Comenzi furnizori', 'Categ. Pret vanzare',
+'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica',  'Categorie pret / descriere', 'Pret lista', 
+'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse'], axis=1, inplace=True)
+df_smc4.fillna(value={'Stoc fizic': 0}, inplace=True)
+df_smc4.rename(columns={'Stoc fizic':'Stoc actual / depozit din stocuri'}, inplace=True)
+
+df_smc4['Zile acoperite de stoc'] = np.where(df_smc4['Medie zilnica an curent']!=0, 
+np.round((df_smc4['Stoc actual / depozit din stocuri']-df_smc4['Cantitate in CF - din CF deschise'])/df_smc4['Medie zilnica an curent']),"FARA RULAJ AN CURENT")
+
+df_smc4['Zile pana la livrare CF'] = np.where(df_smc4['Cantitate in CF - din CF deschise']!=0, 
+(df_smc4['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC']-pd.to_datetime(today)).apply(lambda x: x.days),-1000)
+
+df_smc4['Status']=''
+for index in range(len(df_smc4)): 
+    if (df_smc4['Cant deschisa in CC - din CC deschise'].iloc[index] > 0):
+        if (df_smc4['Stoc actual / depozit din stocuri'].iloc[index] == 0):
+            df_smc4['Status'].iloc[index] = "00 - Produs cu CC si fara stoc"
+        else: 
+            if (df_smc4['Stoc actual / depozit din stocuri'].iloc[index] >= df_smc4['Cant deschisa in CC - din CC deschise'].iloc[index]+df_smc4['Stoc minim / depozit'].iloc[index]):
+                df_smc4['Status'].iloc[index] = "10-SA acopera CC si SM"
+            else: 
+                if (df_smc4['Stoc actual / depozit din stocuri'].iloc[index] >= df_smc4['Cant deschisa in CC - din CC deschise'].iloc[index]):
+                    df_smc4['Status'].iloc[index] = "02-SA acopera CC dar nu acopera SM"
+                else:
+                    df_smc4['Status'].iloc[index] = "01-SA nu acopera CC"
+    else:
+        if (df_smc4['Stoc actual / depozit din stocuri'].iloc[index] >= df_smc4['Stoc minim / depozit'].iloc[index]):
+            df_smc4['Status'].iloc[index] = "09-SA acopera SM"
+        else: 
+            if (df_smc4['Stoc actual / depozit din stocuri'].iloc[index] == 0):
+                if (df_smc4['Zile pana la livrare CF'].iloc[index] < 0):
+                    df_smc4['Status'].iloc[index] = "03-Fara SA si CF intarziate sau fara CF"
+                else: 
+                    df_smc4['Status'].iloc[index] = "04-Fara SA si CF in termen"
+            else:
+                df_smc4['Status'].iloc[index] = "05- SA nu acopera SM - Verificare zile acoperite de stoc"
+
+
+
+st.dataframe(df_smc4)
