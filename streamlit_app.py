@@ -76,7 +76,7 @@ def niceGrid(dataset):
     gridOptions = gb.build()
 
     grid_response = AgGrid(
-        df_ccdModified,
+        dataset,
         gridOptions=gridOptions,
         data_return_mode='AS_INPUT', 
         update_mode='MODEL_CHANGED', 
