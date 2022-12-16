@@ -24,12 +24,12 @@ def color_negative_red(val):
     return 'color: % s' % color
 
 # initializare datarames din fisiere
-df_ccd = pd.read_excel('C:/Personal/Lingemann/LNG/input/Comenzi clienti deschise - lucru.xlsx')
-df_cfd = pd.read_excel('C:/Personal/Lingemann/LNG/input/Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
-df_ccf = pd.read_excel('C:\Personal\Lingemann\LNG\input\Confirmari comenzi furnizori.xlsx', skiprows=1, skipfooter=1)
-df_stock = pd.read_excel('C:\Personal\Lingemann\LNG\input\Stock value_RO.xlsx', skiprows=1, skipfooter=1)
-df_stocmin = pd.read_excel('C:\Personal\Lingemann\LNG\input\Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1)
-df_ka = pd.read_excel('C:/Personal/Lingemann/LNG/input/Clienti - KA.xlsx')
+df_ccd = pd.read_excel('input/Comenzi clienti deschise - lucru.xlsx')
+df_cfd = pd.read_excel('input/Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
+df_ccf = pd.read_excel('input/Confirmari comenzi furnizori.xlsx', skiprows=1, skipfooter=1)
+df_stock = pd.read_excel('input/Stock value_RO.xlsx', skiprows=1, skipfooter=1)
+df_stocmin = pd.read_excel('input/Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1)
+df_ka = pd.read_excel('input/Clienti - KA.xlsx')
 print(os.listdir())
 st.title("LNG Dashboard")
 
@@ -185,9 +185,9 @@ pivot_cc = df_cco.pivot_table(index =['Legatura CC'], values =['Cantitate restan
 pivot_cc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 pivot_cc.loc["GRAND TOTAL"] = pivot_cc['Cantitate restanta'].sum()
 #st.dataframe(pivot_cc)
-pivot_cc.to_excel("C:/Personal/Lingemann/LNG/output/Pivot CC pt SM.xlsx")
+pivot_cc.to_excel("output/Pivot CC pt SM.xlsx")
 # ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
-pcc=pd.read_excel('C:/Personal/Lingemann/LNG/output/Pivot CC pt SM.xlsx')
+pcc=pd.read_excel('output/Pivot CC pt SM.xlsx')
 #pivot_cc_todisplay=pivot_cc.copy()
 #niceGrid(pivot_cc_todisplay)
 
@@ -266,7 +266,7 @@ df_cfim2.fillna(value={'Status comanda': "IN TERMEN"}, inplace=True)
 df_cfim2_todisplay=df_cfim2.copy()
 niceGrid(df_cfim2_todisplay)
 df_cfim2.sort_values(by=['Status comanda'], inplace=True)
-df_cfim2.to_excel('C:/Personal/Lingemann/LNG/output/Comenzi furnizori - completa.xlsx')
+df_cfim2.to_excel('output/Comenzi furnizori - completa.xlsx')
 
 
 st.header("Pt. CC O2N si situatie CF ordonat dupa data comenzii")
@@ -307,9 +307,9 @@ pivot_cf.loc["GRAND TOTAL"] = [pivot_cf['Cantitate restanta'].sum(), pivot_cf['N
 st.dataframe(pivot_cf)
 #pivot_cf_to_display=pivot_cf.copy()
 #niceGrid(pivot_cf_to_display)
-pivot_cf.to_excel("C:/Personal/Lingemann/LNG/output/Pivot CF pt SM.xlsx")
+pivot_cf.to_excel("output/Pivot CF pt SM.xlsx")
 # ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
-pcf=pd.read_excel('C:/Personal/Lingemann/LNG/output/Pivot CF pt SM.xlsx')
+pcf=pd.read_excel('output/Pivot CF pt SM.xlsx')
 
 st.header("Lucru CC - !De gasit un nume mai destept!")
 df_lcc = df_cco.copy()
@@ -363,7 +363,7 @@ niceGrid(df_lcc2_to_display)
 #pivot_statcc.loc["GRAND TOTAL"] = [pivot_cf['Cantitate restanta'].sum(), pivot_cf['Valoare restanta'].sum()]
 #st.dataframe(pivot_statcc)
 groupedcc = df_lcc2.groupby(['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'UM', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor']).aggregate({'Cantitate restanta':'sum', 'Valoare restanta':'sum'})
-groupedcc.to_excel("C:/Personal/Lingemann/LNG/output/GroupBy Test.xlsx")
+groupedcc.to_excel("output/GroupBy Test.xlsx")
 #incearca sa-i faci afisare in tabele mai destepte
 #st.dataframe(groupedcc)
 #st.table(groupedcc)
@@ -441,12 +441,12 @@ for index in range(len(df_smc4)):
 df_smc4_to_display=df_smc4.copy()
 niceGrid(df_smc4_to_display)
 df_smc4.sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
-df_smc4.to_excel("C:/Personal/Lingemann/LNG/output/Situatie SM final.xlsx")
+df_smc4.to_excel("output/Situatie SM final.xlsx")
 
 
 st.header("Centralizator comenzi clienti - copiat in excel")
 pivot_centralizator = groupedcc.groupby(['Cod client', 'Nume client', 'Status comanda']).aggregate({'Valoare restanta':'sum'})
-pivot_centralizator.to_excel("C:/Personal/Lingemann/LNG/output/Status comenzi clienti Centralizator.xlsx")
+pivot_centralizator.to_excel("output/Status comenzi clienti Centralizator.xlsx")
 st.table(pivot_centralizator)
 #pivot_centralizator_to_display=pivot_centralizator.copy()
 #niceGrid(pivot_centralizator_to_display)
