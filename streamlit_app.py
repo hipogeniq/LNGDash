@@ -72,7 +72,9 @@ def niceGrid(dataset):
     gb = GridOptionsBuilder.from_dataframe(dataset)
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=1000) #Add pagination
     gb.configure_side_bar() #Add a sidebar
-    gb.configure_selection('multiple', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
+    gb.configure_default_column(groupable=True)
+    gb.configure_grid_options(allowContextMenuWithControlKey=True)
+    #gb.configure_selection('multiple', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
     gridOptions = gb.build()
 
     grid_response = AgGrid(
@@ -83,8 +85,8 @@ def niceGrid(dataset):
         fit_columns_on_grid_load=False,
         columns_auto_size_mode=True,
         theme='alpine', #Add theme color to the table
-        enable_enterprise_modules=False,
-        height=600, 
+        enable_enterprise_modules=True,
+        height=500, 
         width='100%',
         reload_data=False
     )
@@ -146,7 +148,8 @@ df_StocActual.columns = ['Depozit' ,'Cod produs', 'Descriere' ,	'UM', 'Stoc fizi
 df_StocActual['Legatura'] = ''
 df_StocActual['Legatura'] = df_StocActual['Depozit'].str.strip()+df_StocActual['Cod produs'].str.strip()
 #st.dataframe(df_StocActual)
-niceGrid(df_StocActual)
+df_StocActual_todisplay=df_StocActual.copy()
+niceGrid(df_StocActual_todisplay)
 
 
 st.header("Stocuri minime")
@@ -161,7 +164,8 @@ df_StocuriMinime['Medie zilnica an curent'] = round(df_StocuriMinime['Cantitate 
 df_StocuriMinime['Medie lunara an curent'] = round(df_StocuriMinime['Cantitate an curent']/luna_curenta,4)
 df_StocuriMinime['Medie lunara an precedent'] = round(df_StocuriMinime['Cantitate an precedent']/12,4)
 #st.dataframe(df_StocuriMinime)
-niceGrid(df_StocuriMinime)
+df_StocuriMinime_todisplay=df_StocuriMinime.copy()
+niceGrid(df_StocuriMinime_todisplay)
 
 
 st.header("Comenzi clienti ordonate dupa data de livrare O2N")
@@ -173,7 +177,8 @@ df_cco['Legatura CC'] = df_cco['Depozit'].str.strip()+df_cco['Lieferartikel'].st
 df_cco['Data livrare'] = pd.to_datetime(df_cco['Data livrare'])
 df_cco.sort_values(by='Data livrare', inplace=True)
 #st.dataframe(df_cco)
-niceGrid(df_cco)
+df_cco_todisplay=df_cco.copy()
+niceGrid(df_cco_todisplay)
 
 st.header("RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante")
 pivot_cc = df_cco.pivot_table(index =['Legatura CC'], values =['Cantitate restanta'], aggfunc ='sum')
@@ -183,7 +188,8 @@ pivot_cc.loc["GRAND TOTAL"] = pivot_cc['Cantitate restanta'].sum()
 pivot_cc.to_excel("C:/Personal/Lingemann/LNG/output/Pivot CC pt SM.xlsx")
 # ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
 pcc=pd.read_excel('C:/Personal/Lingemann/LNG/output/Pivot CC pt SM.xlsx')
-niceGrid(pivot_cc)
+#pivot_cc_todisplay=pivot_cc.copy()
+#niceGrid(pivot_cc_todisplay)
 
 st.header("Confirmari Comenzi Furnizori")
 df_ccf2 = df_ccfModified.copy()
@@ -192,7 +198,8 @@ df_ccf2['Legatura CF'] = ''
 #df_ccf2['Legatura CF'] = df_ccf2['Numar intern comanda client'].astype(str)+df_ccf2['Numar pozitie'].astype(str)
 df_ccf2['Legatura CF'] = df_ccf2['Numar intern comanda client'].astype('string')+(df_ccf2['Numar pozitie']).astype('string')
 #st.dataframe(df_ccf2)
-niceGrid(df_ccf2)
+df_ccf2_todisplay=df_ccf2.copy()
+niceGrid(df_ccf2_todisplay)
 
 st.header("Comenzi Furnizori ordonate dupa data de inregistrare O2N")
 df_cfo = df_cfdModified.copy()
@@ -200,8 +207,9 @@ df_cfo.drop(['Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Labe
 df_cfo['Legatura'] = ''
 df_cfo['Legatura'] = df_cfo['Numar intern comanda client.1'].map(str)+df_cfo['Numar pozitie.1'].map(str)+df_cfo['Lieferartikel'].map(str)
 df_cfo.sort_values(by=['Data inregistrare'], inplace=True)
+df_cfo_todisplay=df_cfo.copy()
 #st.dataframe(df_cfo)
-niceGrid(df_cfo)
+niceGrid(df_cfo_todisplay)
 
 st.header("Status comenzi furnizori intarziat")
 df_cfi = df_cfo.copy()
@@ -255,7 +263,8 @@ df_cfim2['Status comanda'] = np.select(conditions, results)
 df_cfim2.fillna(value={'Status comanda': "IN TERMEN"}, inplace=True)
 
 #st.dataframe(df_cfim2)
-niceGrid(df_cfim2)
+df_cfim2_todisplay=df_cfim2.copy()
+niceGrid(df_cfim2_todisplay)
 df_cfim2.sort_values(by=['Status comanda'], inplace=True)
 df_cfim2.to_excel('C:/Personal/Lingemann/LNG/output/Comenzi furnizori - completa.xlsx')
 
@@ -288,14 +297,16 @@ df_cfcc1['Data Confirmare CF'] = df_cfcc1['Status']
 #df_cfcc1['Data Comenzii'] = df_cfcc['Data comenzii']
 df_cfcc1.sort_values(by=['Data inregistrare'], inplace=True)
 #st.dataframe(df_cfcc1)
-niceGrid(df_cfcc1)
+df_cfcc1_todisplay=df_cfcc1.copy()
+niceGrid(df_cfcc1_todisplay)
 
 st.header("RAPORT SENIOR MANAGEMENT - Comenzi Furnizori - cantitati restante")
 pivot_cf = df_cfcc1.pivot_table(index =['Legatura depozit'],aggfunc ={'Nr comanda': lambda x: len(x.unique()),'Cantitate restanta':'sum'})
 pivot_cf.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 pivot_cf.loc["GRAND TOTAL"] = [pivot_cf['Cantitate restanta'].sum(), pivot_cf['Nr comanda'].sum()]
-#st.dataframe(pivot_cf)
-niceGrid(pivot_cf)
+st.dataframe(pivot_cf)
+#pivot_cf_to_display=pivot_cf.copy()
+#niceGrid(pivot_cf_to_display)
 pivot_cf.to_excel("C:/Personal/Lingemann/LNG/output/Pivot CF pt SM.xlsx")
 # ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
 pcf=pd.read_excel('C:/Personal/Lingemann/LNG/output/Pivot CF pt SM.xlsx')
@@ -342,9 +353,10 @@ df_lcc2 = df_lcc1.join(df_ka.set_index('Client'), on=['Nume client'], how='left'
 df_lcc2.drop(['Grup_df_cfcc1'], axis=1, inplace=True)
 df_lcc2.sort_values(by=['Zile intarziere'], ascending=False, inplace=True)
 #st.dataframe(df_lcc2)
-niceGrid(df_lcc2)
+df_lcc2_to_display=df_lcc2.copy()
+niceGrid(df_lcc2_to_display)
 
-st.header("Status CC de copiat - !De gasit un nume mai destept! - se copiaza acum in excel in output folder")
+#st.header("Status CC de copiat - !De gasit un nume mai destept! - se copiaza acum in excel in output folder")
 #pivot_statcc = df_lcc2.pivot_table(index =['KA'], columns=['Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'UM', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], 
 #aggfunc = np.sum, margins=False, margins_name='GRAND TOTAL')
 #pivot_statcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
@@ -353,8 +365,10 @@ st.header("Status CC de copiat - !De gasit un nume mai destept! - se copiaza acu
 groupedcc = df_lcc2.groupby(['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'UM', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor']).aggregate({'Cantitate restanta':'sum', 'Valoare restanta':'sum'})
 groupedcc.to_excel("C:/Personal/Lingemann/LNG/output/GroupBy Test.xlsx")
 #incearca sa-i faci afisare in tabele mai destepte
+#st.dataframe(groupedcc)
 #st.table(groupedcc)
-niceGrid(groupedcc)
+#groupedcc_to_display=groupedcc.copy()
+#niceGrid(groupedcc_to_display)
 
 
 st.header("Verificare SM de copiat")
@@ -424,7 +438,8 @@ for index in range(len(df_smc4)):
 
 
 #st.dataframe(df_smc4)
-niceGrid(df_smc4)
+df_smc4_to_display=df_smc4.copy()
+niceGrid(df_smc4_to_display)
 df_smc4.sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
 df_smc4.to_excel("C:/Personal/Lingemann/LNG/output/Situatie SM final.xlsx")
 
@@ -432,5 +447,6 @@ df_smc4.to_excel("C:/Personal/Lingemann/LNG/output/Situatie SM final.xlsx")
 st.header("Centralizator comenzi clienti - copiat in excel")
 pivot_centralizator = groupedcc.groupby(['Cod client', 'Nume client', 'Status comanda']).aggregate({'Valoare restanta':'sum'})
 pivot_centralizator.to_excel("C:/Personal/Lingemann/LNG/output/Status comenzi clienti Centralizator.xlsx")
-#st.table(pivot_centralizator)
-niceGrid(pivot_centralizator)
+st.table(pivot_centralizator)
+#pivot_centralizator_to_display=pivot_centralizator.copy()
+#niceGrid(pivot_centralizator_to_display)
