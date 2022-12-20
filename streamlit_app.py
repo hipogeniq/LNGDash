@@ -33,39 +33,6 @@ df_ka = pd.read_excel('input/Clienti - KA.xlsx')
 print(os.listdir())
 st.title("LNG Dashboard")
 
-#st.header("Comenzi clienti deschise")
-
-# displaying the DataFrame
-#df_ccd.style.applymap(color_negative_red)
-#st.dataframe(df_ccd)
-#print(tabulate(df_ccd, headers = 'keys', tablefmt = 'pretty'))
-
-
-#st.header("Comenzi clienti deschise - prelucrat")
-df_ccdModified = df_ccd.copy()
-#df_ccdModified['NumeF'] = ''
-
-#pune in coloana Nume F numele furnizorului din Label din df_ccd
-# df_ccdModified.merge(df_ccd, on='Cod client', how='left')
-#df_ccdModified.set_index('Cod client', append=True).join(df_ccd.set_index('Cod client', append=True)['Label'], lsuffix='_left', rsuffix='_right').reset_index('Cod client')
-df_ccdModified.loc[(df_ccdModified['Nr. intern comanda client (text)'].isnull()) & (df_ccdModified['Numar pozitie'].isnull()) & df_ccdModified['Lieferartikel'].isnull(), 'NumeF'] = df_ccdModified['Label']
-cc = df_ccdModified['Cod client'].iloc[0]
-numef = df_ccdModified['NumeF'].iloc[0]
-for index in range(len(df_ccdModified)): 
-    if (df_ccdModified['Cod client'].iloc[index]==cc):
-        df_ccdModified['NumeF'].iloc[index] = numef
-    else:
-        numef = df_ccdModified['NumeF'].iloc[index]
-        cc = df_ccdModified['Cod client'].iloc[index]
-#df_ccdModified.reset_index(inplace=True)
-#st.dataframe(df_ccdModified)
-
-#st.header("Comenzi clienti deschise - doar ce trebe")
-#elimin liniile cu 'Lieferartikel' <NA>
-df_ccdModified = df_ccdModified.dropna(subset=['Lieferartikel'])
-#f_ccdModified.reset_index(inplace=True)
-#st.dataframe(df_ccdModified)
-# AgGrid(df_ccdModified)
 
 ################### A NEW GRID DISPLAY #######################
 def niceGrid(dataset):
@@ -86,7 +53,7 @@ def niceGrid(dataset):
         columns_auto_size_mode=True,
         theme='alpine', #Add theme color to the table
         enable_enterprise_modules=True,
-        height=500, 
+        height=400, 
         width='100%',
         reload_data=False
     )
@@ -97,63 +64,267 @@ def niceGrid(dataset):
     return df
 
 ##############################################################
+
+
+
+############## Comenzi clienti deschise  ###############
+#=======================================================
+#st.header("Comenzi clienti deschise")
+
+#st.header("Comenzi clienti deschise - prelucrat")
+df_ccdModified = df_ccd.copy()
+#df_ccdModified['NumeF'] = ''
+
+#pune in coloana Nume F numele furnizorului din Label din df_ccd
+df_ccdModified.loc[(df_ccdModified['Nr. intern comanda client (text)'].isnull()) & (df_ccdModified['Numar pozitie'].isnull()) & df_ccdModified['Lieferartikel'].isnull(), 'NumeF'] = df_ccdModified['Label']
+cc = df_ccdModified['Cod client'].iloc[0]
+numef = df_ccdModified['NumeF'].iloc[0]
+for index in range(len(df_ccdModified)): 
+    if (df_ccdModified['Cod client'].iloc[index]==cc):
+        df_ccdModified['NumeF'].iloc[index] = numef
+    else:
+        numef = df_ccdModified['NumeF'].iloc[index]
+        cc = df_ccdModified['Cod client'].iloc[index]
+#df_ccdModified.reset_index(inplace=True)
+#st.dataframe(df_ccdModified)
+
+#st.header("Comenzi clienti deschise - doar ce trebe")
+#elimin liniile cu 'Lieferartikel' <NA>
+df_ccdModified = df_ccdModified.dropna(subset=['Lieferartikel'])
+#f_ccdModified.reset_index(inplace=True)
+#st.dataframe(df_ccdModified)
+# AgGrid(df_ccdModified)
+df_ccdModified['Nr. intern comanda client (text)'] = df_ccdModified['Nr. intern comanda client (text)'].astype(int)
+df_ccdModified['Cod client'] = df_ccdModified['Cod client'].astype(int)
+df_ccdModified['Numar pozitie'] = df_ccdModified['Numar pozitie'].astype(int)
+# define the dtype conversion of columns 
+convert_dict ={'Grupa client':np.str_, 'Cod client':np.str_, 'Nr. intern comanda client (text)':np.str_,
+                      'Numar pozitie':np.int8, 'Lieferartikel':np.str_, 'Label': np.str_, 'Tip comanda client':np.str_, 'Depozit':np.str_, 
+                    'Validare generare dispozitie livrare':np.str_, 'Validare comanda client':np.str_, 'Cod termen livrare':np.str_,
+                      'Data livrare':np.datetime64, 'Cantitate pozitie':np.float32, 'Cantitate livrata':np.float32, 'Cantitate restanta':np.float32,
+                      'Valoare restanta':np.float32, 'DB':np.float32, 'DB in %':np.str_, 'User':np.str_, 'Data inregistrare':np.datetime64,
+                      'Cod curs valutar':np.str_,'Livrare partiala permisa 1=DA':np.int8, 'Unitate masura':np.str_, 'Cod produs client':np.str_,
+                      'Nr. comanda client':np.str_, 'Data comanda client':np.datetime64, 'Nr. comanda furnizor atribuit':np.str_, 'Confirmare comanda furnizor':np.float32, 'Ansprechpartner':np.str_}
+df_ccdModified = df_ccdModified.astype(convert_dict)
+#df_ccdModified.fillna(value={'Cod produs client': " "}, inplace=True)
+#df_ccdModified.fillna(value={'Cod produs client': " ", 'Cod curs valutar':" "}, inplace=True)
+# move the NumeF new column on the first position.
+df_ccdModified = df_ccdModified[[
+ 'NumeF',
+ 'Grupa client',
+ 'Cod client',
+ 'Nr. intern comanda client (text)',
+ 'Numar pozitie',
+ 'Lieferartikel',
+ 'Label',
+ 'Tip comanda client',
+ 'Depozit',
+ 'Validare generare dispozitie livrare',
+ 'Validare comanda client',
+ 'Cod termen livrare',
+ 'Data livrare',
+ 'Cantitate pozitie',
+ 'Cantitate livrata',
+ 'Cantitate restanta',
+ 'Valoare restanta',
+ 'DB',
+ 'DB in %',
+ 'User',
+ 'Data inregistrare',
+ 'Cod curs valutar',
+ 'Livrare partiala permisa 1=DA',
+ 'Unitate masura',
+ 'Cod produs client',
+ 'Nr. comanda client',
+ 'Data comanda client',
+ 'Nr. comanda furnizor atribuit',
+ 'Confirmare comanda furnizor',
+ 'Ansprechpartner']]
+#!!!GOOD!!!
+#df_ccdModified.to_excel("output/Comenzi clienti deschise de comparat.xlsx", index=False)
+#df_ccdModified
 #niceGrid(df_ccdModified)
+##############################################################
+
+
+############## Comenzi furnizori deschise  ###############
+#=======================================================
 
 #st.header("Comenzi furnizori deschise")
-df_cfdModified = df_cfd.copy()
+df_cfdModified = df_cfd.copy(deep=True)
 df_cfdModified = df_cfdModified.dropna(subset=['Lieferartikel'])
 #df_cfdModified.reset_index(inplace=True)
 #st.dataframe(df_cfdModified)
+df_cfdModified['Numar intern comanda client'] = df_cfdModified['Numar intern comanda client'].astype(int)
+df_cfdModified['Numar pozitie'] = df_cfdModified['Numar pozitie'].astype(int)
+
+convert_dict={
+ 'Cod client':np.str_,
+ 'Numar intern comanda client':np.str_,
+ 'Numar pozitie':np.float32,
+ 'Label':np.str_,
+ 'Cod client.1':np.str_,
+ 'Adresa 1':np.str_,
+ 'Numar intern comanda client.1':np.str_,
+ 'Numar pozitie.1':np.int8,
+ 'Lieferartikel':np.str_,
+ 'Furnizori / produs':np.str_,
+ 'Descriere produs':np.str_,
+ 'Unitate masura':np.str_,
+ 'Abgangs-Datum':np.datetime64,
+ 'Tip comanda furnizor':np.str_,
+ 'Data inregistrare':np.datetime64,
+ 'Cantitate pozitie':np.float32,
+ 'Cantitate restanta':np.float32,
+ 'Pret manual':np.float32,
+ 'Cod curs valutar':np.str_,
+ 'Valoare comenda  furnizor':np.float32,
+ 'Stoc disponibil':np.float32,
+ 'Confirmare rezervare':np.float32,
+ 'Confirmare comanda furnizor':np.float32,
+ 'Depozit':np.str_,
+ 'Data livrare - dorita':np.datetime64,
+ 'Data livrare':np.datetime64,
+ 'Adresa e-mail':np.str_
+}
+#!!!GOOD!!!
+df_cfdModified = df_cfdModified.astype(convert_dict)
+df_cfdModified['Numar pozitie'] = df_cfdModified['Numar pozitie'].astype(int)
+#df_cfdModified.to_excel("output/Comenzi furnizori deschise de comparat.xlsx", index=False)
+#df_cfdModified
+##############################################################
+
+
+############## Confirmari Comenzi Furnizori  ###############
+#=======================================================
 
 
 #st.header("Confirmari comenzi furnizori")
-#remove first line that contains a title
-#df_ccf.drop(df_ccf.index[:1])
-#remove last line that contains a total
-#df_ccf.drop(df_ccf.index[-1:])
-df_ccfModified = df_ccf.copy()
+
+df_ccfModified = df_ccf.copy(deep=True)
 #elimina rows cu Numar pozitie necompletat
 df_ccfModified = df_ccfModified.dropna(subset=['Numar pozitie'])
 #df_ccfModified.reset_index(inplace=True)
 #st.dataframe(df_ccfModified)
+convert_dict={
+ 'Numar intern comanda client':np.str_,
+ 'Numar pozitie':np.float32,
+ 'Label':np.str_,
+ 'Nr. confirmare 1':np.str_,
+ 'Data iesire 1':np.datetime64,
+ 'Data livrare 1':np.datetime64,
+ 'Nr. confirmare 2':np.str_,
+ 'Data iesire 2':np.datetime64,
+ 'Data livrare 2':np.datetime64,
+ 'Nr. confirmare 3':np.str_,
+ 'Data iesire 3':np.datetime64,
+ 'Data livrare 3':np.datetime64,
+ 'Nr. poz. cod compus':np.int8
+}
+#!!!GOOD!!!
+df_ccfModified = df_ccfModified.astype(convert_dict)
+df_ccfModified['Numar pozitie'] = df_ccfModified['Numar pozitie'].astype(int)
+#df_ccfModified.to_excel("output/Confirmari Comenzi Furnizori de comparat.xlsx", index=False)
+#df_ccfModified
+
+##############################################################
+
+
+############## Valori stocuri  ###############
+#=======================================================
+
 
 #st.header("Valori stocuri")
-#remove first line that contains a title
-#df_stock.drop(df_stock.index[:1])
-#remove last line that contains a total
-#df_stock.drop(df_stock.index[-1:])
-df_stockModified = df_stock.copy()
+df_stockModified = df_stock.copy(deep=True)
 #elimina rows cu Cod produs necompletat
 df_stockModified = df_stockModified.dropna(subset=['Artikelnummer'])
 #df_stockModified.reset_index(inplace=True)
 #st.dataframe(df_stockModified)
+convert_dict={
+ 'erweiterter Lagerbegriff':np.str_,
+ 'Artikelnummer':np.str_,
+ 'Bezeichnung':np.str_,
+ 'Mengeneinheit':np.str_,
+ 'Physischer Best.':np.float32,
+ 'Verfügbarer Bestand':np.float32,
+ 'Reserv. Best.':np.float32,
+ 'Auftrags-Best.':np.float32,
+ 'Bestell-Best.':np.float32,
+ 'Durchschnitts-EKP':np.float32,
+ 'Lagerwert':np.float32,
+ 'Wert Physischer Best.':np.float32,
+ 'Preismengeneinheit Verkauf':np.float32,
+ 'Preismengeneinheit Verkauf (übersetzt)':np.str_,
+ 'Verkaufspreis':np.float32,
+ 'Datum letzter Abgang':np.datetime64,
+ 'Datum letzter Zugang':np.datetime64,
+ 'Standardlieferant':np.str_,
+ 'Artikel Hauptgruppe':np.str_
+}
+#!!!GOOD!!!
+df_stockModified = df_stockModified.astype(convert_dict)
+#df_stockModified.to_excel("output/Valori Stocuri de comparat.xlsx", index=False)
+#df_stockModified
+##############################################################
+
+
+############## Stocuri Minime Depozite Principale  ###############
+#=======================================================
 
 #st.header("Stocuri minime")
-#remove first line that contains a title
-#df_stocmin.drop(df_stocmin.index[:1])
-#remove last line that contains a total
-#df_stocmin.drop(df_stocmin.index[-1:])
-df_stocminModified = df_stocmin.copy()
+df_stocminModified = df_stocmin.copy(deep=True)
 #elimina rows cu Cod produs necompletat
 df_stocminModified = df_stocminModified.dropna(subset=['Cod produs'])
 #df_stocminModified.reset_index(inplace=True)
 #st.dataframe(df_stocminModified)
 
+convert_dict={
+ 'Depozit':np.str_,
+ 'Cod produs':np.str_,
+ 'Label':np.str_,
+ 'Descriere produs':np.str_,
+ 'Unitate masura':np.str_,
+ 'Stoc minim':np.float32,
+ 'Unitate ambalare':np.str_,
+ 'Comanda minima':np.float32,
+ 'Cantitate luna precedenta':np.float32,
+ 'Cantitate an precedent':np.float32,
+ 'Cantitate an curent':np.float32,
+ 'Furnizor principal':np.str_
+}
+#!!!GOOD!!!
+df_stocminModified = df_stocminModified.astype(convert_dict)
+#df_stocminModified.to_excel("output/Stocuri Minime de comparat.xlsx", index=False)
+#df_stocminModified
+##############################################################
+
+
+############## Stoc Actual  ###############
+#=======================================================
+
 st.header("Stoc actual")
 #df_stockModified.loc[:, df_stockModified.columns != '']
-df_StocActual=df_stockModified.copy()
+df_StocActual=df_stockModified.copy(deep=True)
 #st.dataframe(df_StocActual)
 #df_StocActual.reset_index(inplace=True)
 df_StocActual.columns = ['Depozit' ,'Cod produs', 'Descriere' ,	'UM', 'Stoc fizic',	'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti', 'Cantitate in Comenzi furnizori', 'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica', 'Categ. Pret vanzare', 'Categorie pret / descriere', 'Pret lista', 'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse']
 df_StocActual['Legatura'] = ''
 df_StocActual['Legatura'] = df_StocActual['Depozit'].str.strip()+df_StocActual['Cod produs'].str.strip()
 #st.dataframe(df_StocActual)
+
+#schimbare ordine coloane si export in excel pentru comparare
+df_StocActual = df_StocActual[['Legatura', 'Depozit' ,'Cod produs', 'Descriere' , 'UM', 'Stoc fizic', 'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti', 'Cantitate in Comenzi furnizori', 'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica', 'Categ. Pret vanzare', 'Categorie pret / descriere', 'Pret lista', 'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse']]
+df_StocActual.to_excel("output/Stoc actual de comparat.xlsx", index=False)
 df_StocActual_todisplay=df_StocActual.copy()
 niceGrid(df_StocActual_todisplay)
+##############################################################
 
+
+############## Stocuri Minime  ###############
+#=======================================================
 
 st.header("Stocuri minime")
-df_StocuriMinime = df_stocminModified.copy()
+df_StocuriMinime = df_stocminModified.copy(deep=True)
 df_StocuriMinime.columns = ['Depozit' ,'Cod produs', 'Label', 'Descriere produs' , 'UM', 'Stoc minim',	'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal']
 df_StocuriMinime['Legatura'] = ''
 df_StocuriMinime['Legatura'] = df_StocuriMinime['Depozit'].str.strip()+df_StocuriMinime['Cod produs'].str.strip()
@@ -164,55 +335,99 @@ df_StocuriMinime['Medie zilnica an curent'] = round(df_StocuriMinime['Cantitate 
 df_StocuriMinime['Medie lunara an curent'] = round(df_StocuriMinime['Cantitate an curent']/luna_curenta,4)
 df_StocuriMinime['Medie lunara an precedent'] = round(df_StocuriMinime['Cantitate an precedent']/12,4)
 #st.dataframe(df_StocuriMinime)
+#schimbare ordine coloane si export in excel pentru comparare
+df_StocuriMinime = df_StocuriMinime[['Legatura', 'Medie zilnica an curent', 'Depozit' ,'Cod produs', 'Label', 'Descriere produs' , 'UM', 'Stoc minim',	'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal', 'Medie lunara an curent', 'Medie lunara an precedent']]
+df_StocuriMinime.to_excel("output/Stocuri minime de comparat.xlsx", index=False)
 df_StocuriMinime_todisplay=df_StocuriMinime.copy()
 niceGrid(df_StocuriMinime_todisplay)
 
+##############################################################
 
+
+############## Comenzi clienti ordonate dupa data de livrare O2N  ###############
+#=======================================================
 st.header("Comenzi clienti ordonate dupa data de livrare O2N")
-df_cco = df_ccdModified.copy()
-df_cco.columns = ['Grupa client', 'Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact', 'NumeF']
-#df_cco.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-df_cco['Legatura CC'] = ''
-df_cco['Legatura CC'] = df_cco['Depozit'].str.strip()+df_cco['Lieferartikel'].str.strip()
+
+df_cco = df_ccdModified.copy(deep=True)
+df_cco.columns = ['NumeF', 'Grupa client', 'Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']
+
+convert_dict ={'NumeF':np.str, 'Grupa client':np.str_, 'Cod client':np.str_, 'Numar intern comanda client':np.str_,
+                      'Numar pozitie':np.int8, 'Lieferartikel':np.str_, 'Text produs': np.str_, 'Tip comanda client':np.str_, 'Depozit':np.str_, 
+                    'Validare generare dispozitie livrare':np.str_, 'Validare comanda client':np.str_, 'Cod termen livrare':np.str_,
+                      'Data livrare':np.datetime64, 'Cantitate pozitie':np.float32, 'Cantitate livrata':np.float32, 'Cantitate restanta':np.float32,
+                      'Valoare restanta':np.float32, 'DB':np.float32, 'DB%':np.str_, 'Reprezentant principal':np.str_, 'Data inregistrare':np.datetime64,
+                      'Cod curs valutar':np.str_,'Livrare partiala permisa 1=DA':np.int8, 'Unitate masura':np.str_, 'Cod produs client':np.str_,
+                      'Nr. comanda client':np.str_, 'Data comanda client':np.datetime64, 'Nr. comanda furnizor atribuit':np.str_, 'Confirmare comanda furnizor':np.float32, 'Persoana de contact':np.str_}
+#df_cco = df_cco.astype(convert_dict)
+#print(df_cco.info())
+#df_cco
+df_cco['Legatura'] = ''
+df_cco['Legatura'] = df_cco['Depozit'].str.strip()+df_cco['Lieferartikel'].str.strip()
 df_cco['Data livrare'] = pd.to_datetime(df_cco['Data livrare'])
 df_cco.sort_values(by='Data livrare', inplace=True)
 #st.dataframe(df_cco)
+
+#schimbare ordine coloane si export in excel pentru comparare
+df_cco = df_cco[['Legatura', 'Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']]
+df_cco.to_excel("output/Comenzi clienti ordonate dupa data de livrare O2N de comparat.xlsx", index=False)
 df_cco_todisplay=df_cco.copy()
 niceGrid(df_cco_todisplay)
 
+##############################################################
+
+
+############## RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante  ###############
+#=======================================================
+
 st.header("RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante")
-pivot_cc = df_cco.pivot_table(index =['Legatura CC'], values =['Cantitate restanta'], aggfunc ='sum')
-pivot_cc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
-pivot_cc.loc["GRAND TOTAL"] = pivot_cc['Cantitate restanta'].sum()
-#st.dataframe(pivot_cc)
+pivot_cc = df_cco.groupby('Legatura')['Cantitate restanta'].sum()
+#pivot_cc = df_cco.pivot_table(index =['Legatura'], values =['Cantitate restanta'], aggfunc ='sum')
+#pivot_cc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
+#pivot_cc.assign(total=pivot_cc.sum(1)).stack().to_frame('Cantitate restanta')
 pivot_cc.to_excel("output/Pivot CC pt SM.xlsx")
+#pivot_cc.loc["GRAND TOTAL"] = pivot_cc['Cantitate restanta'].sum()
+#st.dataframe(pivot_cc)
+
 # ia inapoi in dataframe pentru ca nu mai am cheia... - alternativa ar fi sa incerc cu groupby sa vad ce iese
 pcc=pd.read_excel('output/Pivot CC pt SM.xlsx')
 #pivot_cc_todisplay=pivot_cc.copy()
+pivot_cc
 #niceGrid(pivot_cc_todisplay)
 
+##############################################################
+
+
+############## Confirmari Comenzi Furnizori  ###############
+#=======================================================
+
 st.header("Confirmari Comenzi Furnizori")
-df_ccf2 = df_ccfModified.copy()
+df_ccf2 = df_ccfModified.copy(deep=True)
 df_ccf2['Numar pozitie'] = df_ccf2['Numar pozitie'].astype(float).astype(int).astype(str)
 df_ccf2['Legatura CF'] = ''
 #df_ccf2['Legatura CF'] = df_ccf2['Numar intern comanda client'].astype(str)+df_ccf2['Numar pozitie'].astype(str)
 df_ccf2['Legatura CF'] = df_ccf2['Numar intern comanda client'].astype('string')+(df_ccf2['Numar pozitie']).astype('string')
 #st.dataframe(df_ccf2)
-df_ccf2_todisplay=df_ccf2.copy()
+df_ccf2_todisplay=df_ccf2.copy(deep=True)
 niceGrid(df_ccf2_todisplay)
 
+##############################################################
+
+
+
+
+
 st.header("Comenzi Furnizori ordonate dupa data de inregistrare O2N")
-df_cfo = df_cfdModified.copy()
+df_cfo = df_cfdModified.copy(deep=True)
 df_cfo.drop(['Cod client', 'Numar intern comanda client', 'Numar pozitie', 'Label'], axis=1, inplace=True)
 df_cfo['Legatura'] = ''
 df_cfo['Legatura'] = df_cfo['Numar intern comanda client.1'].map(str)+df_cfo['Numar pozitie.1'].map(str)+df_cfo['Lieferartikel'].map(str)
 df_cfo.sort_values(by=['Data inregistrare'], inplace=True)
-df_cfo_todisplay=df_cfo.copy()
+df_cfo_todisplay=df_cfo.copy(deep=True)
 #st.dataframe(df_cfo)
 niceGrid(df_cfo_todisplay)
 
 st.header("Status comenzi furnizori intarziat")
-df_cfi = df_cfo.copy()
+df_cfi = df_cfo.copy(deep=True)
 df_cfi.drop(['Cod client.1', 'Abgangs-Datum', 'Tip comanda furnizor', 'Pret manual', 'Cod curs valutar', 'Stoc disponibil', 'Confirmare rezervare', 'Confirmare comanda furnizor', 'Valoare comenda  furnizor', 'Data livrare - dorita'], axis=1, inplace=True)
 df_cfi['Legatura depozit'] = ''
 df_cfi['Legatura depozit'] = df_cfi['Depozit'].str.strip()+df_cfi['Lieferartikel'].str.strip()
@@ -224,7 +439,7 @@ df_cfi['An livrare'] = pd.to_datetime(df_cfi['Data livrare']).apply(lambda x: x.
 df_cfi['Zile intarziere'] = (df_cfi['Zi referinta']-df_cfi['Data livrare']).apply(lambda x: x.days)
 
 # join cu df_cco pt Data livrare('Cel mai vechi termen de livrare catre client') si NumeF('Client') dupa Legatura (CC) cu Legatura Depozit 
-df_cfim1 = df_cfi.join(df_cco.set_index('Legatura CC'), on=['Legatura depozit'], how='left', rsuffix='_df_cco')
+df_cfim1 = df_cfi.join(df_cco.set_index('Legatura'), on=['Legatura depozit'], how='left', rsuffix='_df_cco')
 # join cu df_stocuriMinime pt Stoc minim('Stoc Minim') dupa Legatura (SM) cu Legatura Depozit  
 df_cfim2 = df_cfim1.join(df_StocuriMinime.set_index('Legatura'), on=['Legatura depozit'], how='left', rsuffix='_df_sm')
 
@@ -263,14 +478,14 @@ df_cfim2['Status comanda'] = np.select(conditions, results)
 df_cfim2.fillna(value={'Status comanda': "IN TERMEN"}, inplace=True)
 
 #st.dataframe(df_cfim2)
-df_cfim2_todisplay=df_cfim2.copy()
+df_cfim2_todisplay=df_cfim2.copy(deep=True)
 niceGrid(df_cfim2_todisplay)
 df_cfim2.sort_values(by=['Status comanda'], inplace=True)
 df_cfim2.to_excel('output/Comenzi furnizori - completa.xlsx')
 
 
 st.header("Pt. CC O2N si situatie CF ordonat dupa data comenzii")
-df_cfcc = df_cfim2.copy()
+df_cfcc = df_cfim2.copy(deep=True)
 df_cfcc['Cod PIO'] = df_cfcc['Cod Lingemann']
 df_cfcc['Legatura CF'] = df_cfcc['Nr comanda'].map(str)+df_cfcc['Pozitie'].map(str)
 df_cfcc1 = df_cfcc.join(df_ccf2.set_index('Legatura CF'), on=['Legatura CF'], how='left', rsuffix='_df_ccf')
@@ -297,7 +512,7 @@ df_cfcc1['Data Confirmare CF'] = df_cfcc1['Status']
 #df_cfcc1['Data Comenzii'] = df_cfcc['Data comenzii']
 df_cfcc1.sort_values(by=['Data inregistrare'], inplace=True)
 #st.dataframe(df_cfcc1)
-df_cfcc1_todisplay=df_cfcc1.copy()
+df_cfcc1_todisplay=df_cfcc1.copy(deep=True)
 niceGrid(df_cfcc1_todisplay)
 
 st.header("RAPORT SENIOR MANAGEMENT - Comenzi Furnizori - cantitati restante")
@@ -312,7 +527,7 @@ pivot_cf.to_excel("output/Pivot CF pt SM.xlsx")
 pcf=pd.read_excel('output/Pivot CF pt SM.xlsx')
 
 st.header("Lucru CC - !De gasit un nume mai destept!")
-df_lcc = df_cco.copy()
+df_lcc = df_cco.copy(deep=True)
 df_lcc['Zi referinta'] = pd.to_datetime(today)
 df_lcc['Legatura depozit'] = df_lcc['Depozit'].str.strip()+df_lcc['Lieferartikel'].str.strip()
 df_lcc['KW livrare'] = pd.to_datetime(df_lcc['Data livrare']).apply(lambda x: x.isocalendar().week)
@@ -346,14 +561,14 @@ df_lcc1.fillna(value={'Data Confirmare CF': ""}, inplace=True)
 df_lcc1['Data livrare CF'] = df_lcc1['Data livrare']
 df_lcc1.fillna(value={'Data livrare': ""}, inplace=True)
 #rename columns
-df_lcc1.drop(['Legatura CC', 'Currency', 'TIP TL', 'Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'Data inregistrare_df_cfcc1', 'Cantitate comanda', 'Cantitate restanta_df_cfcc1', 'Depozit_df_cfcc1', 'Data livrare_df_cfcc1', 'Adresa e-mail', 'Legatura', 'Zi referinta_df_cfcc1', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Zile intarziere_df_cfcc1', 'Cel mai vechi termen de livrare catre client', 'Data comenzii', 'Client', 'Stoc minim', 'Cod PIO', 'Legatura CF', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status'], axis=1, inplace=True)
+df_lcc1.drop(['Legatura', 'Currency', 'TIP TL', 'Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'Data inregistrare_df_cfcc1', 'Cantitate comanda', 'Cantitate restanta_df_cfcc1', 'Depozit_df_cfcc1', 'Data livrare_df_cfcc1', 'Adresa e-mail', 'Legatura', 'Zi referinta_df_cfcc1', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Zile intarziere_df_cfcc1', 'Cel mai vechi termen de livrare catre client', 'Data comenzii', 'Client', 'Stoc minim', 'Cod PIO', 'Legatura CF', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status'], axis=1, inplace=True)
 df_lcc1.rename(columns={'Grupa client':'Grup', 'NumeF':'Nume client', 'Numar intern comanda client':'Nr. intern CC', 'Lieferartikel':'Cod produs', 'Text produs':'Denumire', 'Validare generare dispozitie livrare':'Se pot emite DL', 'Validare comanda client':'Order Release', 'Cod termen livrare':'Termen de livrare', 'Cantitate pozitie':'Cantitate comanda', 'Reprezentant principal':'Key Account', 'Data inregistrare':'Data creere', 'Cod curs valutar':'Moneda', 'Nr. comanda client':'NR. extern CC', '':''}, inplace=True)
 #drop columns
 df_lcc2 = df_lcc1.join(df_ka.set_index('Client'), on=['Nume client'], how='left', rsuffix='_df_cfcc1')
 df_lcc2.drop(['Grup_df_cfcc1'], axis=1, inplace=True)
 df_lcc2.sort_values(by=['Zile intarziere'], ascending=False, inplace=True)
 #st.dataframe(df_lcc2)
-df_lcc2_to_display=df_lcc2.copy()
+df_lcc2_to_display=df_lcc2.copy(deep=True)
 niceGrid(df_lcc2_to_display)
 
 #st.header("Status CC de copiat - !De gasit un nume mai destept! - se copiaza acum in excel in output folder")
@@ -372,7 +587,7 @@ groupedcc.to_excel("output/GroupBy Test.xlsx")
 
 
 st.header("Verificare SM de copiat")
-df_smc = df_StocuriMinime.copy()
+df_smc = df_StocuriMinime.copy(deep=True)
 df_smc.drop(['Label', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal'], axis=1, inplace=True)
 df_smc.rename(columns={'Cod produs':'Cod PIO', 'Stoc minim':'Stoc minim / depozit'}, inplace=True)
 
@@ -387,7 +602,7 @@ df_smc1.fillna(value={'Furnizor': ""}, inplace=True)
 df_smc1.rename(columns={'Data comenzii':'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC', 'Status':'Data confirmare cea mai veche CF - din lucru supplier - status pt. CC', 'Data livrare':'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC', 'Furnizor':'Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'}, inplace=True)
 
 #join cu pivot
-df_smc2=df_smc1.join(pcc.set_index('Legatura CC'), on=['Legatura'], how='left', rsuffix='_pcc')
+df_smc2=df_smc1.join(pcc.set_index('Legatura'), on=['Legatura'], how='left', rsuffix='_pcc')
 df_smc2.fillna(value={'Cantitate restanta': 0}, inplace=True)
 df_smc2.rename(columns={'Cantitate restanta':'Cant deschisa in CC - din CC deschise'}, inplace=True)
 
@@ -438,7 +653,7 @@ for index in range(len(df_smc4)):
 
 
 #st.dataframe(df_smc4)
-df_smc4_to_display=df_smc4.copy()
+df_smc4_to_display=df_smc4.copy(deep=True)
 niceGrid(df_smc4_to_display)
 df_smc4.sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
 df_smc4.to_excel("output/Situatie SM final.xlsx")
