@@ -24,11 +24,11 @@ def color_negative_red(val):
     return 'color: % s' % color
 
 # initializare datarames din fisiere
-df_ccd = pd.read_excel('input/Comenzi clienti deschise - lucru.xlsx')
+df_ccd = pd.read_excel('input/Comenzi clienti deschise - lucru.xlsx', skipfooter=1)
 df_cfd = pd.read_excel('input/Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
-df_ccf = pd.read_excel('input/Confirmari comenzi furnizori.xlsx', skiprows=1, skipfooter=1)
-df_stock = pd.read_excel('input/Stock value_RO.xlsx', skiprows=1, skipfooter=1)
-df_stocmin = pd.read_excel('input/Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1)
+df_ccf = pd.read_excel('input/Confirmari comenzi furnizori.xlsx', skiprows=1)
+df_stock = pd.read_excel('input/Stock value_RO.xlsx', skiprows=1)
+df_stocmin = pd.read_excel('input/Stocuri minime dep. principale.xlsx', skiprows=1)
 df_ka = pd.read_excel('input/Clienti - KA.xlsx')
 print(os.listdir())
 st.title("LNG Dashboard")
