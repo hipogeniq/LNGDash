@@ -645,4 +645,11 @@ pivot_centralizator.to_excel("output/Status comenzi clienti Centralizator.xlsx")
 st.table(pivot_centralizator)
 
 
-#%%##############################################################3
+#%%##############################################################
+
+
+##### TO DO #########
+# afiseaza doar output - vezi ce pune in output referinta -> utilizeaza Agrid
+# adauga niste grafice
+# aseaza in pagina -> tabel + graph
+# vezi cum se vd dp mobil
