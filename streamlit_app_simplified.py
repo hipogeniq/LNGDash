@@ -136,7 +136,7 @@ rcc=df_ccd.groupby(['Depozit','Lieferartikel'])
 rcc=rcc.apply(lambda x: x) 
 rcc=rcc.loc[:, ['Depozit','Lieferartikel','Cantitate restanta']]
 rcc=rcc.groupby(['Depozit','Lieferartikel']).sum()
-rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
+#rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 rcc.loc['total']= rcc.sum(numeric_only=True)
 #st.dataframe(rcc)
 rcc.to_excel("output/Raport Comenzi Clienti - Cantitati Restante.xlsx")
@@ -402,7 +402,61 @@ st.write(df_cfi)
 
 ############## Pt. CC O2N si situatie CF ordonat dupa data comenzii ###############
 #%%=======================================================
+st.header("Pt. CC O2N si situatie CF ordonat dupa data comenzii")
+df_cfcc = df_cfi.copy(deep=True)
+df_cfcc['Pozitie'] = df_cfcc['Pozitie'].astype(float).astype(int).astype(str)
+df_cfcc['Cod PIO'] = df_cfcc['Cod Lingemann']
 
+#defineste key pentru join
+df_ccf.set_index('Numar intern comanda furnizor', 'Numar pozitie')
+df_cfcc.set_index('Nr comanda', 'Pozitie')
 
+#df_cfcc1 = df_cfcc.join(df_ccf.set_index('Legatura CF'), on=['Legatura CF'], how='left', rsuffix='_df_ccf')
+df_cfcc = df_cfcc.join(df_ccf, rsuffix='_df_ccf')
+df_cfcc.rename(columns={'Data iesire 1':'DC1', 'Data livrare 1':'TL1', 'Data iesire 2':'DC2', 'Data livrare 2':'TL2','Data iesire 3':'DC3', 'Data livrare 3':'TL3'}, inplace=True)
+df_cfcc.fillna(value={'DC1': pd.to_datetime("1990-01-01"), 'TL1': pd.to_datetime("1990-01-01"), 'DC2': pd.to_datetime("1990-01-01"), 'TL2': pd.to_datetime("1990-01-01"), 'DC3': pd.to_datetime("1990-01-01"), 'TL3': pd.to_datetime("1990-01-01")}, inplace=True)
+
+df_cfcc.drop(['Numar pozitie', 'Label', 'Nr. confirmare 1', 'Nr. confirmare 2','Nr. confirmare 3', 'Nr. poz. cod compus', 'Numar intern comanda furnizor'], axis=1, inplace=True)
+# pentru coloana Status
+df_cfcc['Status'] = 'FARA CONFIRMARE'
+for i, row in df_cfcc.iterrows():
+    if pd.to_datetime(df_cfcc.at[i,'DC3'])>pd.to_datetime("1990-01-01"):
+        df_cfcc.at[i,'Status']=df_cfcc.at[i,'DC3']
+    else:
+        if pd.to_datetime(df_cfcc.at[i,'DC2'])>pd.to_datetime("1990-01-01"):
+            df_cfcc.at[i,'Status']=df_cfcc.at[i,'DC2']
+        else:
+            if pd.to_datetime(df_cfcc.at[i,'DC1'])>pd.to_datetime("1990-01-01"):
+                df_cfcc.at[i,'Status']=df_cfcc.at[i,'DC1']
+            else:
+                 df_cfcc.at[i,'Status'] = "FARA CONFIRMARE"
+
+#df_cfcc1.fillna(value={'Status': "FARA CONFIRMARE"}, inplace=True)
+#df_cfcc1['Status'] = np.where(df_cfcc1['Status']>pd.to_datetime("1900-01-01"), pd.to_datetime(df_cfcc1['Status']), 'FARA CONFIRMARE')
+df_cfcc['Data Confirmare CF'] = df_cfcc['Status']
+#df_cfcc1['Data Comenzii'] = df_cfcc['Data comenzii']
+#print(df_cfcc1.columns.to_list())
+df_cfcc = df_cfcc[['Cod PIO', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Status', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status comanda', 'Furnizor','Nr comanda','Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta', 'Data comenzii',  'Data Confirmare CF', 'Data livrare', 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit', 'Zi referinta']]
+df_cfcc.sort_values(by=['Data comenzii'], inplace=True)
+st.write(df_cfcc)
 
 #%%#########################################################
+
+############## RAPORT SENIOR MANAGEMENT - Comenzi Furnizori - cantitati restante ###############
+#%%=======================================================
+
+st.header("RAPORT SENIOR MANAGEMENT - Comenzi Furnizori - cantitati restante")
+
+rcf=df_cfcc.groupby(['Depozit','Cod PIO'])
+rcf=rcf.apply(lambda x: x) 
+rcf=rcf.loc[:, ['Depozit','Cod PIO','Nr comanda','Cantitate restanta']]
+rcf=rcf.groupby(['Depozit','Cod PIO']).agg({'Nr comanda': lambda x: len(x.unique()), 'Cantitate restanta':'sum'})
+#rcf.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
+rcf.loc['total']= rcf.sum(numeric_only=True)
+#
+rcf.to_excel("output/Raport Comenzi Furnizori - Cantitati Restante.xlsx")
+#st.dataframe(rcf)
+
+pcf=pd.read_excel('output/Raport Comenzi Furnizori - Cantitati Restante.xlsx')
+
+#%%#############################################################
