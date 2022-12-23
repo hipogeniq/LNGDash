@@ -634,7 +634,6 @@ df_stocmin.rename(columns={'Nr comanda':'Numar CF deschise - din CF deschise'}, 
 
 df_stocmin.set_index('Depozit' ,'Cod produs')
 df_stock.set_index('Depozit' ,'Cod produs')
-
 df_stocmin=df_stocmin.join(df_stock, rsuffix='_pcf')
 df_stocmin.drop(['Depozit_pcf', 'Cod produs', 'Descriere', 'UM_pcf', 'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti','Cantitate in Comenzi furnizori', 'Categ. Pret vanzare',
 'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica',  'Categorie pret / descriere', 'Pret lista', 
