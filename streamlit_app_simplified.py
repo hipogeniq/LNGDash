@@ -1,8 +1,8 @@
 # imports for needed packages
+import streamlit as st  # 🎈 data web app development
 import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
 import plotly.express as px
-import streamlit as st  # 🎈 data web app development
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
