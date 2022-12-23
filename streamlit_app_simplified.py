@@ -453,7 +453,7 @@ for i, row in df_cfcc.iterrows():
             if pd.to_datetime(df_cfcc.at[i,'DC1'])>pd.to_datetime("1990-01-01"):
                 df_cfcc.at[i,'Status']=df_cfcc.at[i,'DC1']
             else:
-                 df_cfcc.at[i,'Status'] = "FARA CONFIRMARE"
+                df_cfcc.at[i,'Status'] = "FARA CONFIRMARE"
 
 #df_cfcc1.fillna(value={'Status': "FARA CONFIRMARE"}, inplace=True)
 #df_cfcc1['Status'] = np.where(df_cfcc1['Status']>pd.to_datetime("1900-01-01"), pd.to_datetime(df_cfcc1['Status']), 'FARA CONFIRMARE')
