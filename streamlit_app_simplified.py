@@ -2,10 +2,11 @@
 import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
 import streamlit as st  # 🎈 data web app development
+import plotly.express as px
+
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 from datetime import datetime
-import plotly.express as px
 
 st.set_page_config(
     page_title="LNG Dashboard",
