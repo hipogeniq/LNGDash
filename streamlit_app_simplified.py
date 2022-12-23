@@ -7,6 +7,8 @@ import streamlit as st  # 🎈 data web app development
 from datetime import datetime
 import os
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
+import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(
     page_title="LNG Dashboard",
@@ -41,11 +43,11 @@ def niceGrid(dataset):
         data_return_mode='AS_INPUT', 
         update_mode='MODEL_CHANGED', 
         fit_columns_on_grid_load=False,
-        columns_auto_size_mode=True,
+        columns_auto_size_mode=False,
         theme='alpine', #Add theme color to the table
         enable_enterprise_modules=True,
-        height=400, 
-        width='100%',
+        height=400,
+        width='50%',
         reload_data=False
     )
 
@@ -141,10 +143,20 @@ rcc= pd.pivot_table(df_ccd, values=['Cantitate restanta'], index=['Depozit','Lie
 #rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
 rcc.loc['total']= rcc.sum(numeric_only=True)
 #st.dataframe(rcc)
-niceGrid(rcc)
+#niceGrid(rcc)
 rcc.to_excel("output/Raport Comenzi Clienti - Cantitati Restante.xlsx")
 #niceGrid(pivot_cc.to_frame())
 pcc=pd.read_excel('output/Raport Comenzi Clienti - Cantitati Restante.xlsx')
+# adauga pie chart
+#pcc.sort_values('Cantitate restanta',ascending=False).head(10).plot(kind='pie', y='Cantitate restanta', autopct='%1.0f%%')
+pcc = pcc.dropna(subset=['Lieferartikel'])
+pcc=pcc.sort_values('Cantitate restanta',ascending=False).head(10)
+col5, col6 = st.columns((1,1))
+with col5:
+    niceGrid(rcc)
+with col6:
+    fig = px.pie(pcc, values='Cantitate restanta', names='Lieferartikel', title='Top 10 produse cu cantitati restante')
+    st.plotly_chart(fig, use_container_width=True)
 
 ##############################################################
 #st.header("Comenzi clienti deschise - df_ccd")
@@ -400,7 +412,15 @@ df_cfi=df_cfi[['Zi referinta', 'KW data referinta', 'An referinta', 'KW data liv
 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta',  'Data comenzii', 'Data livrare', 
 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit']]
 #st.write(df_cfi)
-niceGrid(df_cfi)
+
+df_cfi_display=df_cfi.sort_values('Zile intarziere',ascending=False).head(10)
+col5, col6 = st.columns((4,1))
+with col5:
+    niceGrid(df_cfi)
+with col6:
+    fig = px.pie(df_cfi_display, values='Zile intarziere', names='Nr comanda', title='Top 10 comenzi zile intarziere')
+    st.plotly_chart(fig, use_container_width=True)
+
 
 #%%#########################################################
 
@@ -471,8 +491,17 @@ rcf.loc['total']= rcf.sum(numeric_only=True)
 #
 rcf.to_excel("output/Raport Comenzi Furnizori - Cantitati Restante.xlsx")
 #st.dataframe(rcf)
-niceGrid(rcf)
+
 pcf=pd.read_excel('output/Raport Comenzi Furnizori - Cantitati Restante.xlsx')
+pcf = pcf.dropna(subset=['Cod PIO'])
+rcf_todisplay=pcf.sort_values('Cantitate restanta',ascending=False).head(10)
+col5, col6 = st.columns((2,1))
+with col5:
+    niceGrid(rcf)
+with col6:
+    fig = px.pie(rcf_todisplay, values='Cantitate restanta', names='Cod PIO', title='Top 10 produse cu cantitati restante')
+    st.plotly_chart(fig, use_container_width=True)
+
 
 #%%#############################################################
 
@@ -657,7 +686,7 @@ df_stocmin = df_stocmin[['Depozit', 'Cod PIO', 'Descriere produs', 'UM', 'Stoc m
 #niceGrid(df_smc4_to_display)
 df_stocmin.sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
 df_stocmin.to_excel("output/de control/Situatie SM final.xlsx")
-st.write(df_stocmin)
+
 
 #########!!! Output Comenzi Furnizori Completa !!!#########
 st.header("Situatie Stocuri Minime Completa")
