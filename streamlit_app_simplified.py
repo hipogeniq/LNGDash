@@ -2,7 +2,7 @@
 import streamlit as st  # 🎈 data web app development
 import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
-import plotly.express as px
+import plotly.express as px # for simple plots like pie charts
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
