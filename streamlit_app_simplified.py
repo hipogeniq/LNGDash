@@ -1,13 +1,9 @@
 # imports for needed packages
-import time  # to simulate a real time data, time loop
-
 import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
 import streamlit as st  # 🎈 data web app development
 from datetime import datetime
-import os
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
-import matplotlib.pyplot as plt
 import plotly.express as px
 
 st.set_page_config(
