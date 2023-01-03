@@ -17,7 +17,10 @@ Installation(https://docs.streamlit.io/library/get-started/installation )
 - install tabulate: pip install tabulate
 - install datetime: pip install datetime
 - install aggrid: pip install streamlit-aggrid
-- choose where to run app: streamlit run streamlit_app.py --server.port 8502
+- install authenticator: pip install streamlit-authenticator
+- choose where to run app: streamlit run streamlit_app_auth.py --server.port 8503
+
+- in order to use the authentication you need to encript the pwd (or the list of...) with : hashed_passwords = stauth.Hasher(['clearpwd1', 'clearpwd2']).generate()
 
 Materials to read
 ==================
