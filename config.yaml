@@ -21,7 +21,7 @@ credentials:
       role: vanzari
       password: '$2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i' # To be replaced with hashed password
 cookie:
-  expiry_days: 120
+  expiry_days: 1
   key: some_signature_key
   name: some_cookie_name
 preauthorized:
