@@ -4,4 +4,6 @@ openpyxl
 tabulate
 datetime
 streamlit-aggrid
+streamlit_authenticator
+pyyaml
 matplotlib
