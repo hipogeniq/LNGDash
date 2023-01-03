@@ -7,12 +7,12 @@ import plotly as plotly
 import plotly.express as px # for simple plots like pie charts
 import yaml
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
-
+from PIL import Image
 from datetime import datetime
 
 st.set_page_config(
     page_title="LNG Dashboard",
-    page_icon="✅",
+    page_icon="🧊",
     layout="wide",
  )
 ################### Check user autorization and role #######################
@@ -36,7 +36,13 @@ def check_user():
                     if key == "role": role = info[key]
         st.write(f'Welcome *{name}* as *{role}*')
         #### RENDER MAIN PAGE ####
-        st.title("LNG Dashboard")
+        
+        col1, mid, col2 = st.columns([1,1,20])
+        with col1:
+            image = Image.open('lingemann-logo-service.jpg')
+            st.image(image, width=100)
+        with col2:
+            st.title("LNG Dashboard")
         mainpage(role)
     elif st.session_state["authentication_status"] == False:
         st.error('Username/password is incorrect')
@@ -153,7 +159,7 @@ def mainpage(role):
 
     if role=="admin": 
         st.header("Comenzi clienti deschise")
-        st.write(df_ccd)
+        niceGrid(df_ccd)
     #%%#############################################################
 
     ############## RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante  rcc ###############
@@ -192,7 +198,7 @@ def mainpage(role):
     
     if role=="admin":
         st.header("Comenzi clienti deschise - df_ccd")
-        st.write(df_ccd)
+        niceGrid(df_ccd)
     #%%#######################################################
     ############## Comenzi furnizori deschise  df_cfd ###############
     #%%=======================================================
@@ -288,7 +294,7 @@ def mainpage(role):
     
     if role=="admin":
         st.header("Comenzi furnizori deschise - df_cfd")
-        st.write(df_cfd)
+        niceGrid(df_cfd)
     #%%#############################################################
 
 
@@ -321,7 +327,7 @@ def mainpage(role):
     
     if role=="admin":
         st.header("Confirmari Comenzi Furnizori - df_ccf")
-        st.write(df_ccf)
+        niceGrid(df_ccf)
 
     #%%#############################################################
 
@@ -360,7 +366,7 @@ def mainpage(role):
     
     if role=="admin":
         st.header("Valori stocuri - df_stock")
-        st.write(df_stock)
+        niceGrid(df_stock)
     #%%#############################################################
 
 
@@ -397,7 +403,7 @@ def mainpage(role):
     
     if role=="admin":
         st.header("Stocuri minime - df_stocmin")
-        st.write(df_stocmin)
+        niceGrid(df_stocmin)
     #%%#############################################################
 
 
@@ -412,7 +418,7 @@ def mainpage(role):
     df_cfi['An referinta'] = datetime.now().year
     df_cfi['KW data livrare'] = pd.to_datetime(df_cfi['Data livrare']).apply(lambda x: x.isocalendar().week)
     df_cfi['An livrare'] = pd.to_datetime(df_cfi['Data livrare']).apply(lambda x: x.year)
-    df_cfi['Zile intarziere'] = (df_cfi['Zi referinta']-df_cfi['Data livrare']).apply(lambda x: x.days)
+    df_cfi['Zile intarziere'] = (df_cfi['Zi referinta']-pd.to_datetime(df_cfi['Data livrare'])).apply(lambda x: x.days)
 
     #define keys for join
     df_ccd.set_index('Depozit', 'Cod produs')
@@ -561,7 +567,7 @@ def mainpage(role):
     df_ccd['Zi referinta'] = pd.to_datetime(today)
     df_ccd['KW livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.isocalendar().week if not pd.isnull(x) else 0)
     df_ccd['Year livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.year if not pd.isnull(x) else 0)
-    df_ccd['Zile intarziere'] = (df_ccd['Zi referinta']-df_ccd['Data livrare']).apply(lambda x: x.days if not pd.isnull(x) else -1)
+    df_ccd['Zile intarziere'] = (df_ccd['Zi referinta']-pd.to_datetime(df_ccd['Data livrare'])).apply(lambda x: x.days if not pd.isnull(x) else -1)
     df_ccd['Currency'] = df_ccd['Cod curs valutar']
     df_ccd['TIP TL'] = np.where(df_ccd['Cod termen livrare']=="B", "APROXIMATIV","FIX")
 
@@ -615,7 +621,7 @@ def mainpage(role):
     df_ccd.to_excel("output/de control/Lucru CC.xlsx")
     if role=="admin":
         st.header("Lucru CC - Comenzi clienti in raport cu ce am dp la furnizori")
-        st.dataframe(df_ccd)
+        niceGrid(df_ccd)
 
 
     #%%#######################################################
