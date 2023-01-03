@@ -15,17 +15,67 @@ st.set_page_config(
     page_icon="🧊",
     layout="wide",
  )
+
+with open('config.yaml') as file:
+    config = yaml.load(file, Loader=yaml.SafeLoader)
+    authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+    )
+
+
+#################### Update user info ########################
+def update_user_info():
+    try:
+        if authenticator.update_user_details('Register user', preauthorization=False):
+            with open('../config.yaml', 'w') as file:
+                yaml.dump(config, file, default_flow_style=False)
+            st.success('User registered successfully')
+    except Exception as e:
+        st.error(e)
+
+
+#################### Register user ########################
+def register_user():
+    try:
+        if authenticator.register_user('Register user', preauthorization=False):
+            with open('../config.yaml', 'w') as file:
+                yaml.dump(config, file, default_flow_style=False)
+            st.success('User registered successfully')
+    except Exception as e:
+        st.error(e)
+
+##################### Reset password #########################
+def reset_password():
+    try:
+        username=""
+        if authenticator.reset_password(username, 'Reset password'):
+            with open('../config.yaml', 'w') as file:
+                yaml.dump(config, file, default_flow_style=False)
+            st.success('Password modified successfully')
+    except Exception as e:
+        st.error(e)
+
+#################### Forgot password #########################
+def forgot_password():
+    try:
+        username_forgot_pw, email_forgot_password, random_password = authenticator.forgot_password('Forgot password')
+        if username_forgot_pw:
+            with open('../config.yaml', 'w') as file:
+                yaml.dump(config, file, default_flow_style=False)
+            st.success('New password sent securely')
+            # Random password to be transferred to user securely
+        elif username_forgot_pw == False:
+            st.error('Username not found')
+    except Exception as e:
+        st.error(e)
+    
+
 ################### Check user autorization and role #######################
 def check_user():
-    with open('config.yaml') as file:
-        config = yaml.load(file, Loader=yaml.SafeLoader)
-        authenticator = stauth.Authenticate(
-        config['credentials'],
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days'],
-        config['preauthorized']
-        )
     name, authentication_status, username = authenticator.login('Login', 'main')
     if st.session_state["authentication_status"]:
         authenticator.logout('Logout', 'main')
@@ -48,7 +98,7 @@ def check_user():
         st.error('Username/password is incorrect')
     elif st.session_state["authentication_status"] == None:
         st.warning('Please enter your username and password')
-
+    
 ################### A NEW GRID DISPLAY #######################
 def niceGrid(dataset):
     gb = GridOptionsBuilder.from_dataframe(dataset)
@@ -772,7 +822,25 @@ def mainpage(role):
 
  #%%##############################################################
 
-check_user()
+#################### Sidebar for authentication ##########
+st.sidebar.title('Authentication')
+selectedOption = st.sidebar.selectbox('Main', ['', 'Login', 'Register User', 'Forgot password', 'Reset password', 'Update user information'])
+if selectedOption == 'Login':
+    check_user()
+    st.session_state.sidebar_state = 'collapsed'
+elif selectedOption == 'Register User':
+    register_user()
+    st.session_state.sidebar_state = 'collapsed'
+elif selectedOption == 'Forgot password':
+    forgot_password()
+    st.session_state.sidebar_state = 'collapsed'
+elif selectedOption == 'Reset password':
+    reset_password()
+    st.session_state.sidebar_state = 'collapsed'
+elif selectedOption == 'Update user information':
+    #update_user_info()
+    st.session_state.sidebar_state = 'collapsed'
+
 
 
 
