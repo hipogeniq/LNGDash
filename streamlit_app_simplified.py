@@ -639,11 +639,9 @@ df_stocmin.drop(['Depozit_pcf', 'Cod produs', 'Descriere', 'UM_pcf', 'Stoc dispo
 'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse'], axis=1, inplace=True)
 df_stocmin.fillna(value={'Stoc fizic': 0}, inplace=True)
 df_stocmin.rename(columns={'Stoc fizic':'Stoc actual / depozit din stocuri'}, inplace=True)
-convert_dict ={'Medie zilnica an curent':np.float32, 'Depozit': np.str, 'Cod PIO':np.str, 'Descriere produs': np.str, 'UM':np.str, 'Stoc minim / depozit': np.float32, 'Medie lunara an curent':np.float32, 'Medie lunara an precedent':np.float32, 
-'Data confirmare cea mai veche CF - din lucru supplier - status pt. CC':np.str, 'Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC':np.str, 
+convert_dict ={'Medie zilnica an curent':np.float32, 'Stoc minim / depozit': np.float32, 'Medie lunara an curent':np.float32, 'Medie lunara an precedent':np.float32, 
 'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC':np.datetime64, 'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC':np.datetime64,
-'Depozit_pcc':np.str, 'Lieferartikel':np.str, 'Cant deschisa in CC - din CC deschise': np.float32, 'Cod PIO_pcf':np.str, 
-'Cantitate in CF - din CF deschise': np.float64, 'Numar CF deschise - din CF deschise': np.str, 'Stoc actual / depozit din stocuri': np.float32}
+'Cant deschisa in CC - din CC deschise': np.float32, 'Cantitate in CF - din CF deschise': np.float64,'Stoc actual / depozit din stocuri': np.float32}
 df_stocmin = df_stocmin.astype(convert_dict)
 
 df_stocmin['Zile acoperite de stoc'] = np.where(df_stocmin['Medie zilnica an curent']!=0, 
