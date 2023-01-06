@@ -131,6 +131,7 @@ def niceGrid(dataset):
 #################### MAIN PAGE CONTENT ##########################################
 def mainpage(role): 
  
+    data_referinta = st.date_input("Data de referinta", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
     # initializare datarames din fisiere
     df_ccd = pd.read_excel('input/Comenzi clienti deschise - lucru.xlsx', skipfooter=1)
     df_cfd = pd.read_excel('input/Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
@@ -463,12 +464,12 @@ def mainpage(role):
     df_cfi = df_cfd.copy(deep=True)
     df_cfi.drop(['Cod furnizor', 'Abgangs-Datum', 'Tip comanda furnizor', 'Pret manual', 'Cod curs valutar', 'Stoc disponibil', 'Confirmare rezervare', 
     'Confirmare comanda furnizor', 'Valoare comenda  furnizor', 'Data livrare dorita'], axis=1, inplace=True)
-    df_cfi['Zi referinta'] = pd.to_datetime(today)
-    df_cfi['KW data referinta'] = today.isocalendar().week
+    df_cfi['Zi referinta'] = data_referinta
+    df_cfi['KW data referinta'] = data_referinta.isocalendar().week
     df_cfi['An referinta'] = datetime.now().year
     df_cfi['KW data livrare'] = pd.to_datetime(df_cfi['Data livrare']).apply(lambda x: x.isocalendar().week)
     df_cfi['An livrare'] = pd.to_datetime(df_cfi['Data livrare']).apply(lambda x: x.year)
-    df_cfi['Zile intarziere'] = (df_cfi['Zi referinta']-pd.to_datetime(df_cfi['Data livrare'])).apply(lambda x: x.days)
+    df_cfi['Zile intarziere'] = (pd.to_datetime(df_cfi['Zi referinta']) -pd.to_datetime(df_cfi['Data livrare'])).apply(lambda x: x.days)
 
     #define keys for join
     df_ccd.set_index('Depozit', 'Cod produs')
@@ -493,10 +494,10 @@ def mainpage(role):
     df_cfi.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
 
     conditions = [
-        df_cfi['Zi referinta'] >= df_cfi['Cel mai vechi termen de livrare catre client'],
-        df_cfi['An livrare'] > df_cfi['An referinta'],
-        df_cfi['KW data livrare'] == df_cfi['KW data referinta'],
-        df_cfi['KW data livrare'] == df_cfi['KW data referinta']+1
+        pd.to_datetime(df_cfi['Zi referinta']) >= pd.to_datetime(df_cfi['Cel mai vechi termen de livrare catre client']),
+        pd.to_datetime(df_cfi['An livrare']) > pd.to_datetime(df_cfi['An referinta']),
+        pd.to_datetime(df_cfi['KW data livrare']) == pd.to_datetime(df_cfi['KW data referinta']),
+        pd.to_datetime(df_cfi['KW data livrare']) == pd.to_datetime(df_cfi['KW data referinta']+1)
     ]
 
     #define results
@@ -614,10 +615,10 @@ def mainpage(role):
     #%%=======================================================
     #
     #df_lcc = df_ccd.copy(deep=True)
-    df_ccd['Zi referinta'] = pd.to_datetime(today)
+    df_ccd['Zi referinta'] =data_referinta
     df_ccd['KW livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.isocalendar().week if not pd.isnull(x) else 0)
     df_ccd['Year livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.year if not pd.isnull(x) else 0)
-    df_ccd['Zile intarziere'] = (df_ccd['Zi referinta']-pd.to_datetime(df_ccd['Data livrare'])).apply(lambda x: x.days if not pd.isnull(x) else -1)
+    df_ccd['Zile intarziere'] = (pd.to_datetime(df_ccd['Zi referinta'])-pd.to_datetime(df_ccd['Data livrare'])).apply(lambda x: x.days if not pd.isnull(x) else -1)
     df_ccd['Currency'] = df_ccd['Cod curs valutar']
     df_ccd['TIP TL'] = np.where(df_ccd['Cod termen livrare']=="B", "APROXIMATIV","FIX")
 
@@ -760,7 +761,7 @@ def mainpage(role):
     np.round((df_stocmin['Stoc actual / depozit din stocuri']-df_stocmin['Cantitate in CF - din CF deschise'])/df_stocmin['Medie zilnica an curent']),"FARA RULAJ AN CURENT")
 
     df_stocmin['Zile pana la livrare CF'] = np.where(df_stocmin['Cantitate in CF - din CF deschise']!=0, 
-    (df_stocmin['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC']-pd.to_datetime(today)).apply(lambda x: x.days),-1000)
+    (pd.to_datetime(df_stocmin['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC'])-pd.to_datetime(data_referinta)).apply(lambda x: x.days),-1000)
 
     df_stocmin['Status']=''
     for index in range(len(df_stocmin)): 
