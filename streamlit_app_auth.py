@@ -133,12 +133,12 @@ def mainpage(role):
  
     data_referinta = st.date_input("Data de referinta", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
     # initializare datarames din fisiere
-    df_ccd = pd.read_excel('input/Comenzi clienti deschise - lucru.xlsx', skipfooter=1)
-    df_cfd = pd.read_excel('input/Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
-    df_ccf = pd.read_excel('input/Confirmari comenzi furnizori.xlsx', skiprows=1)
-    df_stock = pd.read_excel('input/Stock value_RO.xlsx', skiprows=1)
-    df_stocmin = pd.read_excel('input/Stocuri minime dep. principale.xlsx', skiprows=1)
-    df_ka = pd.read_excel('input/Clienti - KA.xlsx')
+    df_ccd = pd.read_excel('input/002_Comenzi clienti deschise - lucru.xlsx', skipfooter=1)
+    df_cfd = pd.read_excel('input/002_Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
+    df_ccf = pd.read_excel('input/002_Confirmari comenzi furnizori - incepand cu anul precedent.xlsx', skiprows=1)
+    df_stock = pd.read_excel('input/002_Stock value_RO.xlsx', skiprows=1)
+    df_stocmin = pd.read_excel('input/002_Stocuri minime dep. principale.xlsx', skiprows=1)
+    df_ka = pd.read_excel('input/002_Clienti - KA.xlsx')
 
     ############## Comenzi clienti deschise  df_ccd ###############
     #%%=======================================================
