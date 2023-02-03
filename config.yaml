@@ -1,29 +1,34 @@
-credentials:
-  usernames:
-    dtaropa:
-      email: d.taropa@lingemann.ro
-      name: Dan Taropa 
-      role: manager
-      password: '$2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i' # To be replaced with hashed password
-    dsaramet:
-      email: d.saramet@lingemann-koeln.de
-      name: Dorin Saramet
-      role: manager
-      password: '$2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i' # To be replaced with hashed password
-    rmunteanu:
-      email: r.munteanu@lingemann.ro
-      name: Remus Munteanu
-      role: admin
-      password: '$2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i' # To be replaced with hashed password
-    rpriboi:
-      email: r.priboi@lingemann.ro
-      name: Raul Priboi
-      role: vanzari
-      password: '$2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i' # To be replaced with hashed password
 cookie:
   expiry_days: 1
   key: some_signature_key
   name: some_cookie_name
+credentials:
+  usernames:
+    catar:
+      email: cata.ristache@gmail.com
+      name: Cata Ristache
+      password: $2b$12$O12cSDEh9AIGv7ZcvMt2XOf3iQRojozx4hVxaxnyS3GEj8I0Ri1rK
+      role: admin
+    dsaramet:
+      email: d.saramet@lingemann-koeln.de
+      name: Dorin Saramet
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: manager
+    dtaropa:
+      email: d.taropa@lingemann.ro
+      name: Dan Taropa
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: manager
+    rmunteanu:
+      email: r.munteanu@lingemann.ro
+      name: Remus Munteanu
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: admin
+    rpriboi:
+      email: r.priboi@lingemann.ro
+      name: Raul Priboi
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: vanzari
 preauthorized:
   emails:
-    - catalin.ristache@gmail.com
+  - catalin.ristache@gmail.com

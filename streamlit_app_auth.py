@@ -26,12 +26,14 @@ with open('config.yaml') as file:
     config['preauthorized']
     )
 
+current_user = ""
+current_role = ""
 
 #################### Update user info ########################
 def update_user_info():
     try:
-        if authenticator.update_user_details('Register user', preauthorization=False):
-            with open('../config.yaml', 'w') as file:
+        if authenticator.update_user_details(st.session_state.current_user, 'Update user details'):
+            with open('config.yaml', 'w') as file:
                 yaml.dump(config, file, default_flow_style=False)
             st.success('User registered successfully')
     except Exception as e:
@@ -42,7 +44,7 @@ def update_user_info():
 def register_user():
     try:
         if authenticator.register_user('Register user', preauthorization=False):
-            with open('../config.yaml', 'w') as file:
+            with open('config.yaml', 'w') as file:
                 yaml.dump(config, file, default_flow_style=False)
             st.success('User registered successfully')
     except Exception as e:
@@ -51,9 +53,8 @@ def register_user():
 ##################### Reset password #########################
 def reset_password():
     try:
-        username=""
-        if authenticator.reset_password(username, 'Reset password'):
-            with open('../config.yaml', 'w') as file:
+        if authenticator.reset_password(st.session_state.current_user, 'Reset password'):
+            with open('config.yaml', 'w') as file:
                 yaml.dump(config, file, default_flow_style=False)
             st.success('Password modified successfully')
     except Exception as e:
@@ -64,7 +65,7 @@ def forgot_password():
     try:
         username_forgot_pw, email_forgot_password, random_password = authenticator.forgot_password('Forgot password')
         if username_forgot_pw:
-            with open('../config.yaml', 'w') as file:
+            with open('config.yaml', 'w') as file:
                 yaml.dump(config, file, default_flow_style=False)
             st.success('New password sent securely')
             # Random password to be transferred to user securely
@@ -76,6 +77,7 @@ def forgot_password():
 
 ################### Check user autorization and role #######################
 def check_user():
+    current_user =""
     name, authentication_status, username = authenticator.login('Login', 'main')
     if st.session_state["authentication_status"]:
         authenticator.logout('Logout', 'main')
@@ -93,12 +95,14 @@ def check_user():
             st.image(image, width=100)
         with col2:
             st.title("LNG Dashboard")
+        st.session_state.current_user = username
+        current_role = role
         mainpage(role)
     elif st.session_state["authentication_status"] == False:
         st.error('Username/password is incorrect')
     elif st.session_state["authentication_status"] == None:
         st.warning('Please enter your username and password')
-    
+    return current_user
 ################### A NEW GRID DISPLAY #######################
 def niceGrid(dataset):
     gb = GridOptionsBuilder.from_dataframe(dataset)
@@ -130,6 +134,10 @@ def niceGrid(dataset):
 
 #################### MAIN PAGE CONTENT ##########################################
 def mainpage(role): 
+
+    if role=="Unknown":
+        st.header("Fara un rol definit nu poti accesa date. Vorbeste cu Admin")
+        return
  
     data_referinta = st.date_input("Data de referinta", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
     # initializare datarames din fisiere
@@ -827,7 +835,7 @@ def mainpage(role):
 st.sidebar.title('Authentication')
 selectedOption = st.sidebar.selectbox('Main', ['', 'Login', 'Register User', 'Forgot password', 'Reset password', 'Update user information'])
 if selectedOption == 'Login':
-    check_user()
+    current_user = check_user()
     st.session_state.sidebar_state = 'collapsed'
 elif selectedOption == 'Register User':
     register_user()
@@ -839,7 +847,7 @@ elif selectedOption == 'Reset password':
     reset_password()
     st.session_state.sidebar_state = 'collapsed'
 elif selectedOption == 'Update user information':
-    #update_user_info()
+    update_user_info()
     st.session_state.sidebar_state = 'collapsed'
 
 
