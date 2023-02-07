@@ -141,17 +141,118 @@ def mainpage(role):
  
     data_referinta = st.date_input("Data de referinta", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
     # initializare datarames din fisiere
-    df_ccd = pd.read_excel('input/002_Comenzi clienti deschise - lucru.xlsx', skipfooter=1)
-    df_cfd = pd.read_excel('input/002_Comenzi furnizori deschise - lucru.xlsx',skiprows=1)
-    df_ccf = pd.read_excel('input/002_Confirmari comenzi furnizori - incepand cu anul precedent.xlsx', skiprows=1)
-    df_stock = pd.read_excel('input/002_Stock value_RO.xlsx', skiprows=1)
-    df_stocmin = pd.read_excel('input/002_Stocuri minime dep. principale.xlsx', skiprows=1)
+    df_ccd = pd.read_excel('input/002_Comenzi clienti deschise - lucru.xlsx', skiprows=1, skipfooter=1)
+    df_cfd = pd.read_excel('input/002_Comenzi furnizori deschise - lucru.xlsx', skiprows=1, skipfooter=1)
+    df_ccf = pd.read_excel('input/002_Confirmari comenzi furnizori - incepand cu anul precedent.xlsx', skiprows=1, skipfooter=1)
+    df_stock = pd.read_excel('input/002_Stock value_RO.xlsx', skiprows=1, skipfooter=1)
+    df_stocmin = pd.read_excel('input/002_Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1)
     df_ka = pd.read_excel('input/002_Clienti - KA.xlsx')
+
+    ##############################################################
+    #rename first to match the 2023 column names
+    
+    df_ccd.rename(columns= {'Kundengruppe':'Grupa client', 
+    'Kundennummer':'Cod client', 
+    'Auftragsnummer (Text)':'Nr. intern comanda client (text)', 
+    'Positionsnummer':'Numar pozitie', 
+    'Lieferartikel':'Lieferartikel', 
+    'Bezeichnung':'Label', 
+    'Auftragsschlüssel':'Tip comanda client', 
+    'erweiterter Lagerbegriff':'Depozit', 
+    'Komm.Freigabe':'Validare generare dispozitie livrare', 
+    'Kz. Auftragsfreigabe':'Validare comanda client', 
+    'Lieferterminschlüssel':'Cod termen livrare', 
+    'Lieferdatum':'Data livrare', 
+    'Positionsmenge':'Cantitate pozitie', 
+    'Liefermenge':'Cantitate livrata', 
+    'Restmenge':'Cantitate restanta', 
+    'Restwert':'Valoare restanta', 
+    'Deckungsbeitrag':'DB', 
+    'DB in %':'DB in %', 
+    'Sachbearbeiter':'User', 
+    'Erfassungsdatum':'Data inregistrare', 
+    'Währungsschlüssel':'Cod curs valutar', 
+    'Teillieferung erlaubt 1=JA':'Livrare partiala permisa 1=DA', 
+    'Mengeneinheit':'Unitate masura', 
+    'Kundenartikelnr.':'Cod produs client', 
+    'Kunden-Best.nr.':'Nr. comanda client', 
+    'Kunden-Best.datum':'Data comanda client', 
+    'zugeordnete Bestellnummer':'Nr. comanda furnizor atribuit', 
+    'Bestell-Best.':'Confirmare comanda furnizor', 
+    'Ansprechpartner':'Ansprechpartner'}, inplace=True)
+
+    df_cfd.rename(columns=
+    {'Kundennummer':'Cod client', 
+    'Auftragsnummer':'Numar intern comanda client', 
+    'Positionsnummer':'Numar pozitie', 
+    'Bezeichnung':'Label', 
+    'Kundennummer':'Cod client', 
+    'Anschriftszeile1':'Adresa 1', 
+    'Auftragsnummer':'Numar intern comanda client', 
+    'Positionsnummer':'Numar pozitie', 
+    'Lieferartikel':'Lieferartikel', 
+    'Lieferanten Artikelnummer':'Furnizori / produs', 
+    'Article description':'Descriere produs', 
+    'Mengeneinheit':'Unitate masura', 
+    'Abgangs-Datum':'Abgangs-Datum', 
+    'Bestellschlüssel':'Tip comanda furnizor', 
+    'Erfassungsdatum':'Data inregistrare', 
+    'Positionsmenge':'Cantitate pozitie', 
+    'Restmenge':'Cantitate restanta', 
+    'Preis manuell':'Pret manual', 
+    'Währungsschlüssel':'Cod curs valutar', 
+    'Bestellwert':'Valoare comenda  furnizor', 
+    'Verfügbarer Bestand':'Stoc disponibil', 
+    'Reserv. Best.':'Confirmare rezervare', 
+    'Bestell-Best.':'Confirmare comanda furnizor', 
+    'erweiterter Lagerbegriff':'Depozit', 
+    'Wunschlieferdatum':'Data livrare - dorita', 
+    'Lieferdatum':'Data livrare', 
+    'e-Mail-Adresse':'Adresa e-mail'
+    }, inplace=True)
+
+    df_ccf.rename(columns=
+    {'Auftragsnummer':'Numar intern comanda client', 
+    'Positionsnummer':'Numar pozitie', 
+    'Bezeichnung':'Label', 
+    'Bestätigungs-Nummer 1':'Nr. confirmare 1', 
+    'Abgangs-Datum 1':'Data iesire 1', 
+    'Lieferdatum 1':'Data livrare 1', 
+    'Bestätigungs-Nummer 2':'Nr. confirmare 2', 
+    'Abgangs-Datum 2':'Data iesire 2', 
+    'Lieferdatum 2':'Data livrare 2',
+    'Bestätigungs-Nummer 3':'Nr. confirmare 3', 
+    'Abgangs-Datum 3':'Data iesire 3', 
+    'Lieferdatum 3':'Data livrare 3',
+    'Pos.-Nr. Stückliste':'Nr. poz. cod compus'
+    }, inplace=True)
+
+    df_stocmin.rename(columns=
+    {'erweiterter Lagerbegriff':'Depozit', 
+    'Artikelnummer':'Cod produs', 
+    'Bezeichnung':'Label', 
+    'Article description':'Descriere produs', 
+    'Mengeneinheit':'Unitate masura', 
+    'Mindestbestand':'Stoc minim', 
+    'Verpackungseinheit':'Unitate ambalare', 
+    'Mindestbestellmenge':'Comanda minima', 
+    'Menge Vormonat':'Cantitate luna precedenta', 
+    'Menge Vorjahr':'Cantitate an precedent', 
+    'Menge akt. Jahr':'Cantitate an curent', 
+    'Standardlieferant':'Furnizor principal', 
+    }, inplace=True)
+
+    #alte deosebiri: 2023
+    # - ccd are header - elimina prima linie
+    # - cfd are footer
+    # - ccf are footer
+    # - stock are footer, coloanele sunt bune
+
 
     ############## Comenzi clienti deschise  df_ccd ###############
     #%%=======================================================
-
-    df_ccd.loc[(df_ccd['Nr. intern comanda client (text)'].isnull()) & (df_ccd['Numar pozitie'].isnull()) & df_ccd['Lieferartikel'].isnull(), 'NumeF'] = df_ccd['Label']
+   
+    df_ccd.loc[(df_ccd['Nr. intern comanda client (text)'].isnull()) & (df_ccd['Numar pozitie'].isnull()) & (df_ccd['Lieferartikel'].isnull()), 'NumeF'] = df_ccd['Label']
 
     cc = df_ccd['Cod client'].iloc[0]
     numef = df_ccd['NumeF'].iloc[0]
@@ -271,10 +372,10 @@ def mainpage(role):
     'Numar intern comanda client':np.str_,
     'Numar pozitie':np.int8,
     'Label':np.str_,
-    'Cod client.1':np.str_,
+    'Kundennummer.1':np.str_,
     'Adresa 1':np.str_,
-    'Numar intern comanda client.1':np.str_,
-    'Numar pozitie.1':np.int8,
+    'Auftragsnummer.1':np.str_,
+    'Positionsnummer.1':np.int8,
     'Lieferartikel':np.str_,
     'Furnizori / produs':np.str_,
     'Descriere produs':np.str_,
@@ -295,8 +396,14 @@ def mainpage(role):
     'Data livrare':np.datetime64,
     'Adresa e-mail':np.str_
     }
+    
 
     df_cfd = df_cfd.astype(convert_dict)
+    df_cfd.rename(columns={'Kundennummer.1':'Cod client.1',
+    'Auftragsnummer.1':'Numar intern comanda client.1',
+    'Positionsnummer.1':'Numar pozitie.1'
+    }, inplace=True)
+
     df_cfd['Numar pozitie'] = df_cfd['Numar pozitie'].astype(int)
     df_cfd.drop(['Cod client', 'Numar intern comanda client.1', 'Numar pozitie.1', 'Label'], axis=1, inplace=True)
     #selectie coloane
