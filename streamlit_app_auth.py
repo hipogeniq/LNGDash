@@ -5,6 +5,7 @@ import pandas as pd  # read csv, df manipulation
 import streamlit_authenticator as stauth
 import plotly as plotly 
 import plotly.express as px # for simple plots like pie charts
+import locale
 import yaml
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 from PIL import Image
@@ -109,7 +110,7 @@ def niceGrid(dataset):
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=1000) #Add pagination
     gb.configure_side_bar() #Add a sidebar
     gb.configure_default_column(groupable=True)
-    gb.configure_grid_options(allowContextMenuWithControlKey=True)
+    gb.configure_grid_options(allowContextMenuWithControlKey=True, enableCharts=True)
     #gb.configure_selection('multiple', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
     gridOptions = gb.build()
 
@@ -135,10 +136,17 @@ def niceGrid(dataset):
 #################### MAIN PAGE CONTENT ##########################################
 def mainpage(role): 
 
+    #this is for formatting the numeric fields to 999.999,99
+    locale.setlocale(locale.LC_ALL, 'pt_br.utf-8')
+    pd.set_option('display.float_format', lambda x: locale.format('%.2f', x, grouping=True))
+
     if role=="Unknown":
         st.header("Fara un rol definit nu poti accesa date. Vorbeste cu Admin")
         return
  
+    #pd.options.display.precision = 2
+    #pd.options.display.float_format = '{:,.2f}'.format
+      
     data_referinta = st.date_input("Data de referinta", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
     # initializare datarames din fisiere
     df_ccd = pd.read_excel('input/002_Comenzi clienti deschise - lucru.xlsx', skiprows=1, skipfooter=1)
@@ -148,6 +156,7 @@ def mainpage(role):
     df_stocmin = pd.read_excel('input/002_Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1)
     df_ka = pd.read_excel('input/002_Clienti - KA.xlsx')
 
+    
     ##############################################################
     #rename first to match the 2023 column names
     
@@ -311,15 +320,26 @@ def mainpage(role):
     'Confirmare comanda furnizor',
     'Ansprechpartner']]
     #selectie coloane
-    df_ccd.columns = ['Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']
+    df_ccd.columns = ['Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB in percents', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']
     df_ccd.sort_values(by='Data livrare', inplace=True)
     #ordine coloane
-    df_ccd = df_ccd[['Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']]
 
+    #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    df_ccd_formatted = df_ccd.copy(deep=True)
+    df_ccd_formatted = df_ccd_formatted[['Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Lieferartikel', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB in percents', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']]
+    df_ccd_formatted['Valoare restanta'] = df_ccd_formatted['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['DB'] = df_ccd_formatted['DB'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['DB in percents'] = df_ccd_formatted['DB in percents'].apply(lambda x: "{:,.2f}".format(float(x)) if x!='undefiniert' else x).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Cantitate pozitie'] = df_ccd_formatted['Cantitate pozitie'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Cantitate livrata'] = df_ccd_formatted['Cantitate livrata'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Cantitate restanta'] = df_ccd_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Data livrare'] = df_ccd_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+    df_ccd_formatted['Data inregistrare'] = df_ccd_formatted['Data inregistrare'].dt.strftime('%d/%m/%Y')
+    df_ccd_formatted['Data comanda client'] = df_ccd_formatted['Data comanda client'].dt.strftime('%d/%m/%Y')
 
     if role=="admin": 
         st.header("Comenzi clienti deschise")
-        niceGrid(df_ccd)
+        niceGrid(df_ccd_formatted)
     #%%#############################################################
 
     ############## RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante  rcc ###############
@@ -330,6 +350,11 @@ def mainpage(role):
                                     fill_value='').reset_index(level=-1)
     #rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
     rcc.loc['total']= rcc.sum(numeric_only=True)
+
+    #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    rcc_formatted = rcc.copy(deep=True)
+    rcc_formatted['Cantitate restanta'] = rcc_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+
     #st.dataframe(rcc)
     #niceGrid(rcc)
     rcc.to_excel("output/Raport Comenzi Clienti - Cantitati Restante.xlsx")
@@ -344,22 +369,11 @@ def mainpage(role):
         st.header("RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante")
         col5, col6 = st.columns((1,1))
         with col5:
-            niceGrid(rcc)
+            niceGrid(rcc_formatted)
         with col6:
             fig = px.pie(pcc, values='Cantitate restanta', names='Lieferartikel', title='Top 10 produse cu cantitati restante')
             st.plotly_chart(fig, use_container_width=True)
 
-    ##############################################################
-    #
-    #Ordoneaza comenzi clienti O2N
-    df_ccd.columns = ['Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Cod produs', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']
-    df_ccd.sort_values(by='Data livrare', inplace=True)
-    df_ccd = df_ccd[['Grupa client', 'Cod client', 'NumeF', 'Numar intern comanda client', 'Numar pozitie', 'Cod produs', 'Text produs', 'Tip comanda client', 'Depozit', 'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare', 'Data livrare', 'Cantitate pozitie', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal', 'Data inregistrare', 'Cod curs valutar', 'Livrare partiala permisa 1=DA',	'Unitate masura', 'Cod produs client', 'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor', 'Persoana de contact']]
-    
-    if role=="admin":
-        st.header("Comenzi clienti deschise - df_ccd")
-        niceGrid(df_ccd)
-    #%%#######################################################
     ############## Comenzi furnizori deschise  df_cfd ###############
     #%%=======================================================
     #
@@ -458,9 +472,23 @@ def mainpage(role):
     'Data livrare',
     'Adresa e-mail']]
     
+    #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    df_formatted = df_cfd.copy(deep=True)
+    df_formatted['Valoare comenda  furnizor'] = df_formatted['Valoare comenda  furnizor'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate pozitie'] = df_formatted['Cantitate pozitie'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate restanta'] = df_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Pret manual'] = df_formatted['Pret manual'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Stoc disponibil'] = df_formatted['Stoc disponibil'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Confirmare rezervare'] = df_formatted['Confirmare rezervare'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Confirmare comanda furnizor'] = df_formatted['Confirmare comanda furnizor'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Abgangs-Datum'] = df_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data inregistrare'] = df_formatted['Data inregistrare'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare dorita'] = df_formatted['Data livrare dorita'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare'] = df_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+
     if role=="admin":
-        st.header("Comenzi furnizori deschise - df_cfd")
-        niceGrid(df_cfd)
+        st.header("Comenzi furnizori deschise")
+        niceGrid(df_formatted)
     #%%#############################################################
 
 
@@ -491,9 +519,18 @@ def mainpage(role):
     df_ccf['Numar pozitie'] = df_ccf['Numar pozitie'].astype(int)
     df_ccf.columns = [ 'Numar intern comanda furnizor', 'Numar pozitie', 'Label', 'Nr. confirmare 1', 'Data iesire 1', 'Data livrare 1', 'Nr. confirmare 2', 'Data iesire 2', 'Data livrare 2', 'Nr. confirmare 3','Data iesire 3', 'Data livrare 3', 'Nr. poz. cod compus']
     
+    #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    df_formatted = df_ccf.copy(deep=True)
+    df_formatted['Data iesire 1'] = df_formatted['Data iesire 1'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare 1'] = df_formatted['Data livrare 1'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data iesire 2'] = df_formatted['Data iesire 2'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare 2'] = df_formatted['Data livrare 2'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data iesire 3'] = df_formatted['Data iesire 3'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare 3'] = df_formatted['Data livrare 3'].dt.strftime('%d/%m/%Y')
+
     if role=="admin":
-        st.header("Confirmari Comenzi Furnizori - df_ccf")
-        niceGrid(df_ccf)
+        st.header("Confirmari Comenzi Furnizori")
+        niceGrid(df_formatted)
 
     #%%#############################################################
 
@@ -529,10 +566,23 @@ def mainpage(role):
     df_stock.columns = ['Depozit' ,'Cod produs', 'Descriere' ,	'UM', 'Stoc fizic',	'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti', 'Cantitate in Comenzi furnizori', 'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica', 'Categ. Pret vanzare', 'Categorie pret / descriere', 'Pret lista', 'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse'] 
     df_stock = df_stock[['Depozit' ,'Cod produs', 'Descriere' , 'UM', 'Stoc fizic', 'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti', 'Cantitate in Comenzi furnizori', 'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica', 'Categ. Pret vanzare', 'Categorie pret / descriere', 'Pret lista', 'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse']]
     
+    #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    df_formatted = df_stock.copy(deep=True)
+    df_formatted['Stoc fizic'] = df_formatted['Stoc fizic'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Stoc disponibil'] = df_formatted['Stoc disponibil'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cant. Rezervata'] = df_formatted['Cant. Rezervata'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate in Comenzi clienti'] = df_formatted['Cantitate in Comenzi clienti'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate in Comenzi furnizori'] = df_formatted['Cantitate in Comenzi furnizori'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Pret mediu de achizitie'] = df_formatted['Pret mediu de achizitie'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Valoare marfa disponibila'] = df_formatted['Valoare marfa disponibila'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Valoare marfa fizica'] = df_formatted['Valoare marfa fizica'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Pret lista'] = df_formatted['Pret lista'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Data ultima iesire'] = df_formatted['Data ultima iesire'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data ultima intrare'] = df_formatted['Data ultima intrare'].dt.strftime('%d/%m/%Y')
     
     if role=="admin":
-        st.header("Valori stocuri - df_stock")
-        niceGrid(df_stock)
+        st.header("Valori stocuri")
+        niceGrid(df_formatted)
     #%%#############################################################
 
 
@@ -556,7 +606,7 @@ def mainpage(role):
     'Cantitate an curent':np.float32,
     'Furnizor principal':np.str_
     }
-    #!!!GOOD!!!
+
     df_stocmin = df_stocmin.astype(convert_dict)
     df_stocmin.columns = ['Depozit' ,'Cod produs', 'Label', 'Descriere produs' , 'UM', 'Stoc minim',	'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal']
     today = datetime.now().date()
@@ -567,9 +617,19 @@ def mainpage(role):
     df_stocmin['Medie lunara an precedent'] = round(df_stocmin['Cantitate an precedent']/12,4)
     df_stocmin = df_stocmin[['Medie zilnica an curent', 'Depozit' ,'Cod produs', 'Label', 'Descriere produs' , 'UM', 'Stoc minim',	'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal', 'Medie lunara an curent', 'Medie lunara an precedent']]
     
+    df_formatted = df_stocmin.copy(deep=True)
+    df_formatted['Medie zilnica an curent'] = df_formatted['Medie zilnica an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Medie lunara an curent'] = df_formatted['Medie lunara an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Medie lunara an precedent'] = df_formatted['Medie lunara an precedent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Stoc minim'] = df_formatted['Stoc minim'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Comanda minima'] = df_formatted['Comanda minima'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate luna precedenta'] = df_formatted['Cantitate luna precedenta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate an precedent'] = df_formatted['Cantitate an precedent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate an curent'] = df_formatted['Cantitate an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+
     if role=="admin":
-        st.header("Stocuri minime - df_stocmin")
-        niceGrid(df_stocmin)
+        st.header("Stocuri minime")
+        niceGrid(df_formatted)
     #%%#############################################################
 
 
@@ -579,7 +639,7 @@ def mainpage(role):
     df_cfi = df_cfd.copy(deep=True)
     df_cfi.drop(['Cod furnizor', 'Abgangs-Datum', 'Tip comanda furnizor', 'Pret manual', 'Cod curs valutar', 'Stoc disponibil', 'Confirmare rezervare', 
     'Confirmare comanda furnizor', 'Valoare comenda  furnizor', 'Data livrare dorita'], axis=1, inplace=True)
-    df_cfi['Zi referinta'] = data_referinta
+    df_cfi['Zi referinta'] = pd.to_datetime(data_referinta)
     df_cfi['KW data referinta'] = data_referinta.isocalendar().week
     df_cfi['An referinta'] = datetime.now().year
     df_cfi['KW data livrare'] = pd.to_datetime(df_cfi['Data livrare']).apply(lambda x: x.isocalendar().week)
@@ -596,17 +656,17 @@ def mainpage(role):
     # join cu df_stocuriMinime pt Stoc minim('Stoc Minim') dupa Legatura (SM) cu Legatura Depozit  
     df_cfi = df_cfi.join(df_stocmin, rsuffix='_df_sm')
 
-
-    df_cfi.drop(['Grupa client', 'Cod client', 'Numar intern comanda client_df_ccd', 'Numar pozitie_df_ccd', 'Cod produs_df_ccd', 'Text produs', 'Tip comanda client', 'Depozit_df_ccd', 
+    #'Cod produs_df_ccd',
+    df_cfi.drop(['Grupa client', 'Cod client', 'Numar intern comanda client_df_ccd', 'Numar pozitie_df_ccd', 'Text produs', 'Tip comanda client', 'Depozit_df_ccd', 
     'Validare generare dispozitie livrare', 'Validare comanda client', 'Cod termen livrare','Cantitate pozitie_df_ccd', 'Cantitate livrata', 'Cantitate restanta_df_ccd', 
-    'Valoare restanta', 'DB', 'DB%', 'Reprezentant principal','Cod curs valutar', 'Livrare partiala permisa 1=DA', 'Unitate masura_df_ccd', 'Cod produs client', 
+    'Valoare restanta', 'DB', 'DB in percents', 'Reprezentant principal','Cod curs valutar', 'Livrare partiala permisa 1=DA', 'Unitate masura_df_ccd', 'Cod produs client', 
     'Nr. comanda client', 'Data comanda client', 'Nr. comanda furnizor atribuit', 'Confirmare comanda furnizor','Persoana de contact', 'Depozit_df_sm', 'Data inregistrare_df_ccd', 'Cod produs_df_sm', 
     'Label', 'Descriere produs_df_sm', 'UM', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 
     'Furnizor principal', 'Medie zilnica an curent', 'Medie lunara an curent', 'Medie lunara an precedent'], axis=1, inplace=True)
     df_cfi.rename(columns={'Nume furnizor':'Furnizor', 'Numar intern comanda client':'Nr comanda', 'Numar pozitie':'Pozitie', 'Cod produs':'Cod Lingemann', 
     'Furnizori / produs':'Cod Furnizori / produs', 'Descriere produs':'Denumire produs', 'Unitate masura':'UM', 'Data inregistrare': 'Data comenzii', 
     'Data livrare':'Cel mai vechi termen de livrare catre client', 'Data livrare_df_ccd':'Data livrare', 'Cantitate pozitie':'Cantitate comanda', 'NumeF':'Client', 'Adresa e-mail':'Adresa contact'}, inplace=True)
-    df_cfi.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
+    
 
     conditions = [
         pd.to_datetime(df_cfi['Zi referinta']) >= pd.to_datetime(df_cfi['Cel mai vechi termen de livrare catre client']),
@@ -626,13 +686,25 @@ def mainpage(role):
     'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit']]
     #st.write(df_cfi)
 
+    #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    df_formatted = df_cfi.copy(deep=True)
+    df_formatted['Stoc minim'] = df_formatted['Stoc minim'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate comanda'] = df_formatted['Cantitate comanda'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate restanta'] = df_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Zi referinta'] = df_formatted['Zi referinta'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data comenzii'] = df_formatted['Data comenzii'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare'] = df_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+    df_formatted['Cel mai vechi termen de livrare catre client'] = df_formatted['Cel mai vechi termen de livrare catre client'].dt.strftime('%d/%m/%Y')
+    df_formatted.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
+    df_cfi.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
+
     df_cfi_display=df_cfi.sort_values('Zile intarziere',ascending=False).head(10)
     
     if (role=="admin") or (role=="vanzari"):
         st.header("Status Comenzi Furnizori Intarziate")
         col5, col6 = st.columns((4,1))
         with col5:
-            niceGrid(df_cfi)
+            niceGrid(df_formatted)
         with col6:
             fig = px.pie(df_cfi_display, values='Zile intarziere', names='Nr comanda', title='Top 10 comenzi zile intarziere')
             st.plotly_chart(fig, use_container_width=True)
@@ -684,6 +756,18 @@ def mainpage(role):
     
     df_out_CF = df_cfcc.copy(deep=True)
     df_out_CF = df_out_CF[['Status comanda', 'Furnizor','Nr comanda','Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta', 'Data comenzii',  'Data Confirmare CF', 'Data livrare', 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit', 'Zi referinta']]
+
+     #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
+    #.apply(lambda x: "{:,.2f}".format(float(x)) if x!='undefiniert' else x)
+    df_out_CF['Stoc minim'] = df_out_CF['Stoc minim'].apply(lambda x: '{:,.2f}'.format(x).replace(",", "~").replace(".", ",").replace("~", ".") if x!='FARA STOC MINIM' else x)
+    df_out_CF['Cantitate comanda'] = df_out_CF['Cantitate comanda'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_out_CF['Cantitate restanta'] = df_out_CF['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_out_CF['Zi referinta'] = df_out_CF['Zi referinta'].dt.strftime('%d/%m/%Y')
+    df_out_CF['Data comenzii'] = df_out_CF['Data comenzii'].dt.strftime('%d/%m/%Y')
+    df_out_CF['Data Confirmare CF'] = df_out_CF['Data Confirmare CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+    df_out_CF['Data livrare'] = df_out_CF['Data livrare'].dt.strftime('%d/%m/%Y')
+    df_out_CF['Cel mai vechi termen de livrare catre client'] = df_out_CF['Cel mai vechi termen de livrare catre client'].dt.strftime('%d/%m/%Y')
+    
     df_out_CF.to_excel("output/Situatie Comenzi Furnizori Completa.xlsx")
 
     if (role=="admin") or (role=="vanzari"):
@@ -707,6 +791,8 @@ def mainpage(role):
                                     fill_value='').reset_index(level=-1)
     #rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
     rcf.loc['total']= rcf.sum(numeric_only=True)
+    rcf_formatted = rcf.copy(deep=True)
+    rcf_formatted['Cantitate restanta'] = rcf_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     #
     rcf.to_excel("output/Raport Comenzi Furnizori - Cantitati Restante.xlsx")
     #st.dataframe(rcf)
@@ -718,7 +804,7 @@ def mainpage(role):
     if (role=="admin") or (role=="manager"):
         col5, col6 = st.columns((2,1))
         with col5:
-            niceGrid(rcf)
+            niceGrid(rcf_formatted)
         with col6:
             fig = px.pie(rcf_todisplay, values='Cantitate restanta', names='Cod PIO', title='Top 10 produse cu cantitati restante')
             st.plotly_chart(fig, use_container_width=True)
@@ -730,7 +816,7 @@ def mainpage(role):
     #%%=======================================================
     #
     #df_lcc = df_ccd.copy(deep=True)
-    df_ccd['Zi referinta'] =data_referinta
+    df_ccd['Zi referinta'] =pd.to_datetime(data_referinta)
     df_ccd['KW livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.isocalendar().week if not pd.isnull(x) else 0)
     df_ccd['Year livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.year if not pd.isnull(x) else 0)
     df_ccd['Zile intarziere'] = (pd.to_datetime(df_ccd['Zi referinta'])-pd.to_datetime(df_ccd['Data livrare'])).apply(lambda x: x.days if not pd.isnull(x) else -1)
@@ -778,16 +864,32 @@ def mainpage(role):
     df_ccd.drop(['Grup_df_cfcc1', 'Nr comanda', 'Unitate masura'], axis=1, inplace=True)
     df_ccd = df_ccd[['KW livrare', 'Year livrare', 'Zile intarziere', 'Furnizor', 'Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'KA', 
     'Currency', 'TIP TL', 'RESTRICTII','Status comanda', 'Grup', 'Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'Cod produs', 'Denumire', 'Tip comanda client',
-    'Depozit', 'Se pot emite DL', 'Order Release', 'Termen de livrare', 'Data livrare', 'Cantitate comanda', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB%', 
+    'Depozit', 'Se pot emite DL', 'Order Release', 'Termen de livrare', 'Data livrare', 'Cantitate comanda', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB in percents', 
     'Key Account', 'Data creere', 'Moneda', 'Livrare integrala', 'UM', 'Cod produs client', 'NR. extern CC', 'Data comanda client', 'Nr. comanda furnizor atribuit', 
     'Confirmare comanda furnizor', 'Persoana de contact', 'Zi referinta']]
 
     df_ccd.sort_values(by=['Zile intarziere'], ascending=False, inplace=True)
     #
+
+    df_ccd_formatted = df_ccd.copy(deep=True)
+    df_ccd_formatted['Cea mai veche CF'] = df_ccd_formatted['Cea mai veche CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CF') else x)
+    df_ccd_formatted['Data Confirmare CF'] = df_ccd_formatted['Data Confirmare CF'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+    df_ccd_formatted['Data livrare CF'] = df_ccd_formatted['Data livrare CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+    df_ccd_formatted['Data livrare'] = df_ccd_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+    df_ccd_formatted['Cantitate comanda'] = df_ccd_formatted['Cantitate comanda'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Cantitate livrata'] = df_ccd_formatted['Cantitate livrata'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Cantitate restanta'] = df_ccd_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Valoare restanta'] = df_ccd_formatted['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['DB'] = df_ccd_formatted['DB'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['DB in percents'] = df_ccd_formatted['DB in percents'].apply(lambda x: "{:,.2f}".format(float(x)) if x!='undefiniert' else x).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_ccd_formatted['Data creere'] = df_ccd_formatted['Data creere'].dt.strftime('%d/%m/%Y')
+    df_ccd_formatted['Data comanda client'] = df_ccd_formatted['Data comanda client'].dt.strftime('%d/%m/%Y')
+    df_ccd_formatted['Zi referinta'] = df_ccd_formatted['Zi referinta'].dt.strftime('%d/%m/%Y')
+
     df_ccd.to_excel("output/de control/Lucru CC.xlsx")
     if role=="admin":
         st.header("Lucru CC - Comenzi clienti in raport cu ce am dp la furnizori")
-        niceGrid(df_ccd)
+        niceGrid(df_ccd_formatted)
 
 
     #%%#######################################################
@@ -809,11 +911,21 @@ def mainpage(role):
     pivot_statccF = pd.read_excel('output/de control/Status CC de copiat.xlsx')
     #########!!! Output Comenzi Furnizori Completa !!!#########
     
+    df_formatted = pivot_statccF.copy(deep=True)
+    
+    df_formatted['Data creere'] = df_formatted['Data creere'].dt.strftime('%d/%m/%Y')
+    df_formatted['Data livrare'] = df_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+    df_formatted['Cea mai veche CF'] = df_formatted['Cea mai veche CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CF') else x)
+    df_formatted['Data Confirmare CF'] = df_formatted['Data Confirmare CF'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+    df_formatted['Data livrare CF'] = df_formatted['Data livrare CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+    df_formatted['Cantitate restanta'] = df_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Valoare restanta'] = df_formatted['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+
     df_out_SC = pivot_statccF.copy(deep=True)
     df_out_SC.to_excel("output/Status Comenzi Clienti Completa.xlsx")
     if (role=="admin") or (role=="vanzari"):
         st.header("Status Comenzi Clienti Completa")
-        niceGrid(pivot_statccF)
+        niceGrid(df_formatted)
     ###########################################################
 
     #%%#######################################################
@@ -917,10 +1029,23 @@ def mainpage(role):
     df_out_SM = df_stocmin.copy(deep=True)
     df_out_SM .sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
     df_out_SM.to_excel("output/Situatie SM Completa.xlsx")
+
+    df_formatted = df_out_SM.copy(deep=True)
     
+    df_formatted['Stoc minim / depozit'] = df_formatted['Stoc minim / depozit'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Medie zilnica an curent'] = df_formatted['Medie zilnica an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Medie lunara an curent'] = df_formatted['Medie lunara an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Medie lunara an precedent'] = df_formatted['Medie lunara an precedent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cant deschisa in CC - din CC deschise'] = df_formatted['Cant deschisa in CC - din CC deschise'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Stoc actual / depozit din stocuri'] = df_formatted['Stoc actual / depozit din stocuri'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Cantitate in CF - din CF deschise'] = df_formatted['Cantitate in CF - din CF deschise'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Data emitere cea mai veche CF  - din lucru supplier - status pt. CC'] = df_formatted['Data emitere cea mai veche CF  - din lucru supplier - status pt. CC'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CF') else x)
+    df_formatted['Data confirmare cea mai veche CF - din lucru supplier - status pt. CC'] = df_formatted['Data confirmare cea mai veche CF - din lucru supplier - status pt. CC'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+    df_formatted['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC'] = df_formatted['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE') else x)
+
     if (role=="admin") or (role=="vanzari"):
         st.header("Situatie Stocuri Minime Completa")
-        niceGrid(df_out_SM)
+        niceGrid(df_formatted)
     ###########################################################
 
 
@@ -929,7 +1054,7 @@ def mainpage(role):
     pivot_centralizator.to_excel("output/Status comenzi clienti Centralizator.xlsx")
     #citeste-l inapoi ca sa-l poti afisa OK
     pivot_centralizator=pd.read_excel("output/Status comenzi clienti Centralizator.xlsx")
-    
+    pivot_centralizator['Valoare restanta'] = pivot_centralizator['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     
     if (role=="admin") or (role=="vanzari") or (role=="manager"):
         st.header("Centralizator comenzi clienti")
