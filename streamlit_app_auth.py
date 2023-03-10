@@ -768,6 +768,7 @@ def mainpage(role):
     #print(df_cfcc1.columns.to_list())
     df_cfcc = df_cfcc[['Cod PIO', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Status', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status comanda', 'Furnizor','Nr comanda','Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta', 'Data comenzii',  'Data Confirmare CF', 'Data livrare', 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit', 'Zi referinta']]
     df_cfcc.sort_values(by=['Data comenzii'], inplace=True)
+    df_cfcc.to_excel("output/Situatie Comenzi Furnizori Completa - neformatat.xlsx")
     #st.write(df_cfcc)
 
     #########!!! Output Comenzi Furnizori Completa !!!#########
@@ -973,7 +974,16 @@ def mainpage(role):
         niceGrid(pivot_statccF) 
     #     niceGrid(df_formatted)
     
+    container = []
+    for label, _df in df_ccd.groupby(['KA','Nume client', 'Nr. intern CC', 'Depozit', 'Cod produs']):
+	    _df.loc[f'{label[0]} {label[1]} {label[2]} {label[3]} {label[4]} Subtotal'] = _df[['Cantitate restanta', 'Valoare restanta']].sum()
+	    container.append(_df)
 
+    df_summary = pd.concat(container)
+    df_summary.loc['Grand Total'] = df_summary[['Cantitate restanta', 'Valoare restanta']].sum()
+    if (role=="admin") or (role=="vanzari"):
+        st.header("Status Comenzi Clienti Completa var 2")
+        niceGrid(df_summary)
     # df_formatted = pivot_statccF.copy(deep=True)
     
     # df_formatted['Data creere'] = df_formatted['Data creere'].dt.strftime('%d/%m/%Y')
