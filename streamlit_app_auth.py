@@ -349,7 +349,7 @@ def mainpage(role):
     
     rcc= pd.pivot_table(df_ccd, values=['Cantitate restanta'], index=['Depozit','Lieferartikel'], aggfunc='sum',
                                     fill_value='').reset_index(level=-1)
-    rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
+    #rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
     rcc.loc['total']= rcc.sum(numeric_only=True)
 
     #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
@@ -634,7 +634,7 @@ def mainpage(role):
     #%%#############################################################
 
 
-    ############## Status comenzi furnizori intarziat ###############
+    ############## Status comenzi furnizori intarziate ###############
     #%%=======================================================
     
     df_cfi = df_cfd.copy(deep=True)
@@ -700,8 +700,11 @@ def mainpage(role):
     'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta',  'Data comenzii', 'Data livrare', 
     'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit']]
     df_cfi.drop_duplicates(subset=['Nr comanda', 'Pozitie'], inplace=True, ignore_index=True)
+    df_cfi = df_cfi.sort_values('Zile intarziere',ascending=False)
     #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
     df_formatted = df_cfi.copy(deep=True)
+    df_formatted.drop(['Zi referinta'], axis=1, inplace=True)
+    df_formatted = df_formatted.sort_values('Zile intarziere',ascending=False)
     #df_formatted.drop(['Zi referinta'])
     df_formatted['Stoc minim'] = df_formatted['Stoc minim'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     df_formatted['Stoc minim'] = df_formatted['Stoc minim'].apply(lambda x: 'FARA STOC MINIM' if x=='nan' else x)
@@ -712,6 +715,7 @@ def mainpage(role):
     df_formatted['Data livrare'] = df_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
     df_formatted['Cel mai vechi termen de livrare catre client'] = df_formatted['Cel mai vechi termen de livrare catre client'].dt.strftime('%d/%m/%Y')
     df_formatted.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
+    
     df_cfi.fillna(value={'Cel mai vechi termen de livrare catre client': "FARA COMANDA CLIENT", 'Client': " ", 'Stoc minim': "FARA STOC MINIM"}, inplace=True)
 
     df_cfi_display=df_cfi.sort_values('Zile intarziere',ascending=False).head(10)
@@ -767,8 +771,9 @@ def mainpage(role):
     #df_cfcc1['Data Comenzii'] = df_cfcc['Data comenzii']
     #print(df_cfcc1.columns.to_list())
     df_cfcc = df_cfcc[['Cod PIO', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Status', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status comanda', 'Furnizor','Nr comanda','Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta', 'Data comenzii',  'Data Confirmare CF', 'Data livrare', 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit', 'Zi referinta']]
-    df_cfcc.sort_values(by=['Data comenzii'], inplace=True)
+    
     df_cfcc.to_excel("output/Situatie Comenzi Furnizori Completa - neformatat.xlsx")
+    df_cfcc = df_cfcc.sort_values('Data comenzii', ascending = True)
     #st.write(df_cfcc)
 
     #########!!! Output Comenzi Furnizori Completa !!!#########
@@ -781,11 +786,19 @@ def mainpage(role):
     df_out_CF['Stoc minim'] = df_out_CF['Stoc minim'].apply(lambda x: '{:,.2f}'.format(x).replace(",", "~").replace(".", ",").replace("~", ".") if x!='FARA STOC MINIM' else x)
     df_out_CF['Cantitate comanda'] = df_out_CF['Cantitate comanda'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     df_out_CF['Cantitate restanta'] = df_out_CF['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_out_CF['Status'] = df_out_CF['Status'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
     #df_out_CF['Zi referinta'] = df_out_CF['Zi referinta'].dt.strftime('%d/%m/%Y')
+    df_out_CF['DC1'] = pd.to_datetime(df_out_CF['DC1']).dt.strftime('%d/%m/%Y')
+    df_out_CF['DC2'] = pd.to_datetime(df_out_CF['DC2']).dt.strftime('%d/%m/%Y')
+    df_out_CF['DC3'] = pd.to_datetime(df_out_CF['DC3']).dt.strftime('%d/%m/%Y')
+    df_out_CF['TL1'] = pd.to_datetime(df_out_CF['TL1']).dt.strftime('%d/%m/%Y')
+    df_out_CF['TL2'] = pd.to_datetime(df_out_CF['TL2']).dt.strftime('%d/%m/%Y')
+    df_out_CF['TL3'] = pd.to_datetime(df_out_CF['TL3']).dt.strftime('%d/%m/%Y')
     df_out_CF['Data comenzii'] = pd.to_datetime(df_out_CF['Data comenzii']).dt.strftime('%d/%m/%Y')
     df_out_CF['Data Confirmare CF'] = df_out_CF['Data Confirmare CF'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
     df_out_CF['Data livrare'] = pd.to_datetime(df_out_CF['Data livrare']).dt.strftime('%d/%m/%Y')
     df_out_CF['Cel mai vechi termen de livrare catre client'] = df_out_CF['Cel mai vechi termen de livrare catre client'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
+    #df_out_CF = df_out_CF.sort_values(by=['Data comenzii'], inplace=True)
     df_out_CF.to_excel("output/Situatie Comenzi Furnizori Completa.xlsx")
 
     if (role=="admin") or (role=="vanzari"):
@@ -805,10 +818,12 @@ def mainpage(role):
     #rcf=rcf.loc[:, ['Depozit','Cod PIO','Nr comanda','Cantitate restanta']]
     #rcf=rcf.groupby(['Depozit','Cod PIO']).agg({'Nr comanda': lambda x: len(x.unique()), 'Cantitate restanta':'sum'})
     #rcf.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
-    rcf= pd.pivot_table(df_cfcc, values=['Nr comanda','Cantitate restanta'], index=['Depozit','Cod PIO'], aggfunc={'Nr comanda' : 'count', 'Cantitate restanta' : 'sum'},
+    df_cfcc['Legatura Depozit'] = df_cfcc['Depozit'].str.strip() + df_cfcc['Cod PIO'].str.strip()
+    rcf= pd.pivot_table(df_cfcc, values=['Nr comanda','Cantitate restanta'], index=['Legatura Depozit'], aggfunc={'Nr comanda' : 'count', 'Cantitate restanta' : 'sum'},
                                     fill_value='').reset_index(level=-1)
     #rcc.sort_values(by='Cantitate restanta', ascending=False, inplace=True)
     rcf.loc['total']= rcf.sum(numeric_only=True)
+    rcf = rcf.sort_values('Legatura Depozit')
     rcf_formatted = rcf.copy(deep=True)
     rcf_formatted['Cantitate restanta'] = rcf_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     #
@@ -816,7 +831,7 @@ def mainpage(role):
     #st.dataframe(rcf)
 
     pcf=pd.read_excel('output/Raport Comenzi Furnizori - Cantitati Restante.xlsx')
-    pcf = pcf.dropna(subset=['Cod PIO'])
+    pcf = pcf.dropna(subset=['Legatura Depozit'])
     rcf_todisplay=pcf.sort_values('Cantitate restanta',ascending=False).head(10)
     
     if (role=="admin") or (role=="manager"):
@@ -824,7 +839,7 @@ def mainpage(role):
         with col5:
             niceGrid(rcf_formatted)
         with col6:
-            fig = px.pie(rcf_todisplay, values='Cantitate restanta', names='Cod PIO', title='Top 10 produse cu cantitati restante')
+            fig = px.pie(rcf_todisplay, values='Cantitate restanta', names='Legatura Depozit', title='Top 10 produse cu cantitati restante')
             st.plotly_chart(fig, use_container_width=True)
 
 
@@ -944,11 +959,17 @@ def mainpage(role):
     ############## Status CC de copiat - Comenzile per key accounts si status ###############
     #%%=======================================================
     df_ccd.drop(['Zi referinta'], axis=1, inplace=True)
-    df_ccd = df_ccd[['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor','Cantitate restanta', 'Valoare restanta']]
+    df_ccd.fillna(value={'Furnizor': "None"}, inplace=True)
+    df_ccd.fillna(value={'KA': "None Assigned"}, inplace=True)
+    df_ccd.fillna(value={'Data livrare CF': " "}, inplace=True)
+    df_ccd.fillna(value={'Data Confirmare CF': " "}, inplace=True)
+    #df_ccd = df_ccd[['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor','Cantitate restanta', 'Valoare restanta']]
     
-
-    pivot_ccd = pd.pivot_table(df_ccd, values=['Cantitate restanta', 'Valoare restanta'], index=['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], columns=['Status comanda'], aggfunc=np.sum)
+    #niceGrid(df_ccd)
+    #pivot_ccd = pd.pivot_table(df_ccd, values=['Cantitate restanta', 'Valoare restanta'], index=['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], columns=['Status comanda'], aggfunc=np.sum)
+    pivot_ccd = df_ccd.pivot_table(df_ccd[['Cantitate restanta', 'Valoare restanta']], index=['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], aggfunc=np.sum)
     #pivot_ccd.loc['Grand Total']= df_ccd[['Cantitate restanta', 'Valoare restanta']].sum()
+    pivot_ccd.loc[('','','','','','','','','','','','','','','','','','','','','Grand Total'), :] = df_ccd[['Cantitate restanta', 'Valoare restanta']].sum()
     #st.write(pivot_ccd)
 
     #st.header("Comenzile per key accounts si status - se copiaza acum in excel in output folder")
@@ -967,23 +988,24 @@ def mainpage(role):
     #groupedccP.to_excel("output/Status CC de copiat var2.xlsx", index=False)
 
     pivot_statccF = pd.read_excel('output/de control/Status CC de copiat - pivot.xlsx')
-    #########!!! Output Comenzi Furnizori Completa !!!#########
+    #########!!! Output Comenzi Furnizori Completa !!! add formatting #########
+    pivot_statccF_formatted = pivot_statccF.copy(deep=True)
+    pivot_statccF_formatted['Cea mai veche CF'] = pivot_statccF_formatted['Cea mai veche CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CF') else x)
+    pivot_statccF_formatted['Data Confirmare CF'] = pivot_statccF_formatted['Data Confirmare CF'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
+    pivot_statccF_formatted['Data livrare CF'] = pivot_statccF_formatted['Data livrare CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!=' ' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
+    pivot_statccF_formatted['Data livrare'] = pivot_statccF_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
+    pivot_statccF_formatted['Cantitate restanta'] = pivot_statccF_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    pivot_statccF_formatted['Valoare restanta'] = pivot_statccF_formatted['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    pivot_statccF_formatted['Data creere'] = pivot_statccF_formatted['Data creere'].dt.strftime('%d/%m/%Y')
+
+
     # st.write(pivot_statccF)
     if (role=="admin") or (role=="vanzari"):
         st.header("Status Comenzi Clienti Completa")
-        niceGrid(pivot_statccF) 
+        niceGrid(pivot_statccF_formatted) 
     #     niceGrid(df_formatted)
     
-    container = []
-    for label, _df in df_ccd.groupby(['KA','Nume client', 'Nr. intern CC', 'Depozit', 'Cod produs']):
-	    _df.loc[f'{label[0]} {label[1]} {label[2]} {label[3]} {label[4]} Subtotal'] = _df[['Cantitate restanta', 'Valoare restanta']].sum()
-	    container.append(_df)
 
-    df_summary = pd.concat(container)
-    df_summary.loc['Grand Total'] = df_summary[['Cantitate restanta', 'Valoare restanta']].sum()
-    if (role=="admin") or (role=="vanzari"):
-        st.header("Status Comenzi Clienti Completa var 2")
-        niceGrid(df_summary)
     # df_formatted = pivot_statccF.copy(deep=True)
     
     # df_formatted['Data creere'] = df_formatted['Data creere'].dt.strftime('%d/%m/%Y')
@@ -1010,14 +1032,12 @@ def mainpage(role):
     #df_smc = df_StocuriMinime.copy(deep=True)
     df_stocmin.drop(['Label', 'Unitate ambalare', 'Comanda minima', 'Cantitate luna precedenta', 'Cantitate an precedent', 'Cantitate an curent', 'Furnizor principal'], axis=1, inplace=True)
     df_stocmin.rename(columns={'Cod produs':'Cod PIO', 'Stoc minim':'Stoc minim / depozit'}, inplace=True)
-
+    
     # create index pentu join
     #df_stocmin.set_index('Depozit' ,'Cod produs')
     #df_cfcc.set_index('Depozit', 'Cod PIO')
     df_stocmin=df_stocmin.join(df_cfcc.set_index('Legatura'), on='Legatura',rsuffix='_df_cfcc1')
-
-    #df_smc1=df_smc.join(df_cfcc1.set_index('Legatura depozit'), on=['Legatura'], how='left', rsuffix='_df_cfcc1')
-
+    
     df_stocmin.drop(['Nr comanda', 'Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM_df_cfcc1', 'Cantitate comanda', 'Cantitate restanta', 
     'Depozit_df_cfcc1', 'Adresa contact', 'Zi referinta', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Zile intarziere', 'Cel mai vechi termen de livrare catre client', 
     'Client', 'Stoc minim', 'Status comanda', 'Cod PIO_df_cfcc1', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Data Confirmare CF'], axis=1, inplace=True)
@@ -1025,8 +1045,12 @@ def mainpage(role):
     df_stocmin.fillna(value={'Status': ""}, inplace=True)
     df_stocmin.fillna(value={'Data livrare': ""}, inplace=True)
     df_stocmin.fillna(value={'Furnizor': ""}, inplace=True)
+    df_stocmin.sort_values(by=['Legatura', 'Cod PIO', 'Furnizor', 'Data comenzii'], inplace=True)
+    df_stocmin.drop_duplicates(['Legatura', 'Cod PIO', 'Furnizor'], keep='first', inplace=True)
     df_stocmin.rename(columns={'Data comenzii':'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC', 'Status':'Data confirmare cea mai veche CF - din lucru supplier - status pt. CC', 'Data livrare':'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC', 'Furnizor':'Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'}, inplace=True)
-
+    
+    df_stocmin.to_excel("output/Stocmin.xlsx", index=False)
+    
     # create index pentu join
     #df_stocmin.set_index('Depozit' ,'Cod produs')
     pcc['Legatura']=pcc['Depozit'].str.strip() + pcc['Lieferartikel'].str.strip()
@@ -1034,17 +1058,17 @@ def mainpage(role):
     df_stocmin=df_stocmin.join(pcc.set_index('Legatura'), on='Legatura', rsuffix='_pcc')
     df_stocmin.fillna(value={'Cantitate restanta': 0}, inplace=True)
     df_stocmin.rename(columns={'Cantitate restanta':'Cant deschisa in CC - din CC deschise'}, inplace=True)
-
+    
     #df_stocmin.set_index('Depozit' ,'Cod produs')
-    pcf['Legatura']=pcf['Depozit'].str.strip() + pcf['Cod PIO'].str.strip()
+    #pcf['Legatura']=pcf['Depozit'].str.strip() + pcf['Cod PIO'].str.strip()
     #pcf.set_index('Depozit', 'Cod PIO')
 
-    df_stocmin=df_stocmin.join(pcf.set_index('Legatura'), on='Legatura', rsuffix='_pcf')
+    df_stocmin=df_stocmin.join(pcf.set_index('Legatura Depozit'), on='Legatura', rsuffix='_pcf')
     df_stocmin.fillna(value={'Cantitate restanta': 0}, inplace=True)
     df_stocmin.rename(columns={'Cantitate restanta':'Cantitate in CF - din CF deschise'}, inplace=True)
     df_stocmin.fillna(value={'Nr comanda': ""}, inplace=True)
     df_stocmin.rename(columns={'Nr comanda':'Numar CF deschise - din CF deschise'}, inplace=True)
-
+    
     #df_stocmin.set_index('Depozit' ,'Cod produs')
     df_stock.set_index('Depozit' ,'Cod produs')
     df_stock['Legatura']=df_stock['Depozit'].str.strip() + df_stock['Cod produs'].str.strip()
@@ -1096,14 +1120,14 @@ def mainpage(role):
     #st.dataframe(df_smc4)
     #df_smc4_to_display=df_stocmin.copy(deep=True)
     #niceGrid(df_smc4_to_display)
-    df_stocmin.sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
+    df_stocmin = df_stocmin.sort_values(['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'])
     df_stocmin.to_excel("output/de control/Situatie SM final.xlsx")
 
 
     #########!!! Output Comenzi Furnizori Completa !!!#########
     
     df_out_SM = df_stocmin.copy(deep=True)
-    df_out_SM .sort_values(by=['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'], ascending=False, inplace=True)
+    df_out_SM = df_out_SM.sort_values(['Depozit','Cod PIO'])
     df_out_SM.to_excel("output/Situatie SM Completa.xlsx")
 
     df_formatted = df_out_SM.copy(deep=True)
