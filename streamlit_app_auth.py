@@ -99,7 +99,7 @@ def check_user():
             st.title("LNG Dashboard")
         st.session_state.current_user = username
         current_role = role
-        mainpage(role)
+        mainpage(role, name)
     elif st.session_state["authentication_status"] == False:
         st.error('Username/password is incorrect')
     elif st.session_state["authentication_status"] == None:
@@ -135,20 +135,20 @@ def niceGrid(dataset):
     return df
 
 #################### MAIN PAGE CONTENT ##########################################
-def mainpage(role): 
+def mainpage(role, name): 
 
     #this is for formatting the numeric fields to 999.999,99
     locale.setlocale(locale.LC_ALL, 'pt_br.utf-8')
     pd.set_option('display.float_format', lambda x: locale.format('%.2f', x, grouping=True))
 
     if role=="Unknown":
-        st.header("Fara un rol definit nu poti accesa date. Vorbeste cu Admin")
+        st.header(name + " -> Fara un rol definit nu poti accesa date. Vorbeste cu Admin")
         return
  
     #pd.options.display.precision = 2
     #pd.options.display.float_format = '{:,.2f}'.format
       
-    data_referinta = st.date_input("Data de referinta", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
+    data_referinta = st.date_input("Data de referinta pentru "+name + " :", value=pd.to_datetime("today"), max_value=pd.to_datetime("today"))
     # initializare datarames din fisiere
     df_ccd = pd.read_excel('input/002_Comenzi clienti deschise - lucru.xlsx', skiprows=1, skipfooter=1, converters={'erweiterter Lagerbegriff': str, 'Kundenartikelnr.': str})
     df_cfd = pd.read_excel('input/002_Comenzi furnizori deschise - lucru.xlsx', skiprows=1, skipfooter=1, converters={'Lieferanten Artikelnummer': str, 'erweiterter Lagerbegriff': str})
@@ -156,6 +156,8 @@ def mainpage(role):
     df_stock = pd.read_excel('input/002_Stock value_RO.xlsx', skiprows=1, skipfooter=1, converters={'erweiterter Lagerbegriff': str})
     df_stocmin = pd.read_excel('input/002_Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1, converters={'erweiterter Lagerbegriff': str, 'Bezeichnung': str, 'Verpackungseinheit': str})
     df_ka = pd.read_excel('input/002_Clienti - KA.xlsx')
+    #df_access = pd.read_excel('input/002_MapAccess.xlsx')
+    #filtru_access_depozit = st.multiselect(ia din df_access si seteaza vizibilitatea pe false)
 
     
     ##############################################################
@@ -364,7 +366,7 @@ def mainpage(role):
     # adauga pie chart
     #pcc.sort_values('Cantitate restanta',ascending=False).head(10).plot(kind='pie', y='Cantitate restanta', autopct='%1.0f%%')
     pcc = pcc.dropna(subset=['Lieferartikel'])
-    pcc=pcc.sort_values('Cantitate restanta',ascending=False).head(10)
+    pcc1=pcc.sort_values('Cantitate restanta',ascending=False).head(10)
 
     if (role=="admin") or (role=="manager"):
         st.header("RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante")
@@ -372,7 +374,7 @@ def mainpage(role):
         with col5:
             niceGrid(rcc_formatted)
         with col6:
-            fig = px.pie(pcc, values='Cantitate restanta', names='Lieferartikel', title='Top 10 produse cu cantitati restante')
+            fig = px.pie(pcc1, values='Cantitate restanta', names='Lieferartikel', title='Top 10 produse cu cantitati restante')
             st.plotly_chart(fig, use_container_width=True)
 
     ############## Comenzi furnizori deschise  df_cfd ###############
@@ -683,7 +685,7 @@ def mainpage(role):
     df_cfi['Status comanda']= "IN TERMEN"
 
     conditions = [
-        pd.to_datetime(df_cfi['Zi referinta']) >= pd.to_datetime(df_cfi['Data livrare']),
+        pd.to_datetime(df_cfi['Zi referinta']) > pd.to_datetime(df_cfi['Data livrare']),
         pd.to_datetime(df_cfi['An livrare']) > pd.to_datetime(df_cfi['An referinta']),
         pd.to_datetime(df_cfi['KW data livrare']) == pd.to_datetime(df_cfi['KW data referinta']),
         pd.to_datetime(df_cfi['KW data livrare']) == pd.to_datetime(df_cfi['KW data referinta']+1)
@@ -773,7 +775,7 @@ def mainpage(role):
     df_cfcc = df_cfcc[['Cod PIO', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Status', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status comanda', 'Furnizor','Nr comanda','Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta', 'Data comenzii',  'Data Confirmare CF', 'Data livrare', 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit', 'Zi referinta']]
     
     df_cfcc.to_excel("output/Situatie Comenzi Furnizori Completa - neformatat.xlsx")
-    df_cfcc = df_cfcc.sort_values('Data comenzii', ascending = True)
+    df_cfcc.sort_values('Data comenzii', ascending = True, inplace=True)
     #st.write(df_cfcc)
 
     #########!!! Output Comenzi Furnizori Completa !!!#########
@@ -850,12 +852,13 @@ def mainpage(role):
     #
     #df_lcc = df_ccd.copy(deep=True)
     df_ccd['Zi referinta'] =pd.to_datetime(data_referinta)
-    df_ccd['KW livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.isocalendar().week if not pd.isnull(x) else 0)
-    df_ccd['Year livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.year if not pd.isnull(x) else 0)
+    df_ccd['KW data referinta'] = data_referinta.isocalendar().week
+    df_ccd['An referinta'] = datetime.now().year
+    df_ccd['KW data livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.isocalendar().week if not pd.isnull(x) else 0)
+    df_ccd['An livrare'] = pd.to_datetime(df_ccd['Data livrare']).apply(lambda x: x.year if not pd.isnull(x) else 0)
     df_ccd['Zile intarziere'] = (pd.to_datetime(df_ccd['Zi referinta'])-pd.to_datetime(df_ccd['Data livrare'])).apply(lambda x: x.days if not pd.isnull(x) else -1)
     df_ccd['Currency'] = df_ccd['Cod curs valutar']
     df_ccd['TIP TL'] = np.where(df_ccd['Cod termen livrare']=="B", "APROXIMATIV","FIX")
-
 
     df_ccd['Legatura']=df_ccd['Depozit'].str.strip() + df_ccd['Lieferartikel'].str.strip()
     df_cfcc['Legatura']=df_cfcc['Depozit'].str.strip() + df_cfcc['Cod PIO'].str.strip()
@@ -866,7 +869,6 @@ def mainpage(role):
     #create index for join
     #df_cfcc.set_index('Depozit', 'Cod PIO')
     #df_ccd.set_index('Depozit', 'Lieferartikel')
-
     #df_ccd = df_ccd.join(df_cfcc, rsuffix='_df_cfcc1')
     #replace Currency RON for empty values
     df_ccd.fillna(value={'Currency': "RON"}, inplace=True)
@@ -898,7 +900,7 @@ def mainpage(role):
     df_ccd['Status comanda']= "IN TERMEN"
 
     conditions = [
-        pd.to_datetime(df_ccd['Zi referinta']) >= pd.to_datetime(df_ccd['Data livrare']),
+        pd.to_datetime(df_ccd['Zi referinta']) > pd.to_datetime(df_ccd['Data livrare']),
         pd.to_datetime(df_ccd['An livrare']) > pd.to_datetime(df_ccd['An referinta']),
         pd.to_datetime(df_ccd['KW data livrare']) == pd.to_datetime(df_ccd['KW data referinta']),
         pd.to_datetime(df_ccd['KW data livrare']) == pd.to_datetime(df_ccd['KW data referinta']+1)
@@ -913,16 +915,18 @@ def mainpage(role):
 
     #rename columns
     df_ccd.drop(['Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'Cantitate comanda', 'Cantitate restanta_df_cfcc1', 'Depozit_df_cfcc1', 
-    'Data livrare_df_cfcc1', 'Adresa contact', 'Zi referinta_df_cfcc1', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 
+    'Data livrare_df_cfcc1', 'Adresa contact', 'Zi referinta_df_cfcc1', 'KW data referinta', 'An referinta', 
     'Zile intarziere_df_cfcc1', 'Cel mai vechi termen de livrare catre client', 'Data comenzii', 'Client', 'Stoc minim', 'Cod PIO', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status'], axis=1, inplace=True)
+    #'KW data livrare', 'An livrare', 
     df_ccd.rename(columns={'Grupa client':'Grup', 'NumeF':'Nume client', 'Numar intern comanda client':'Nr. intern CC', 'Lieferartikel':'Cod produs', 
     'Text produs':'Denumire', 'Validare generare dispozitie livrare':'Se pot emite DL', 'Validare comanda client':'Order Release', 'Cod termen livrare':'Termen de livrare', 
     'Cantitate pozitie':'Cantitate comanda', 'Reprezentant principal':'Key Account', 'Data inregistrare':'Data creere', 'Cod curs valutar':'Moneda', 
     'Nr. comanda client':'NR. extern CC', '':'', 'Livrare partiala permisa 1=DA': 'Livrare integrala'}, inplace=True)
     #drop columns
+    
     df_ccd = df_ccd.join(df_ka.set_index('Client'), on=['Nume client'], how='left', rsuffix='_df_cfcc1')
     df_ccd.drop(['Grup_df_cfcc1', 'Nr comanda'], axis=1, inplace=True)
-    df_ccd = df_ccd[['KW livrare', 'Year livrare', 'Zile intarziere', 'Furnizor', 'Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'KA', 
+    df_ccd = df_ccd[['KW data livrare', 'An livrare', 'Zile intarziere', 'Furnizor', 'Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'KA', 
     'Currency', 'TIP TL', 'RESTRICTII','Status comanda', 'Grup', 'Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'Cod produs', 'Denumire', 'Tip comanda client',
     'Depozit', 'Se pot emite DL', 'Order Release', 'Termen de livrare', 'Data livrare', 'Cantitate comanda', 'Cantitate livrata', 'Cantitate restanta', 'Valoare restanta', 'DB', 'DB in percents', 
     'Key Account', 'Data creere', 'Moneda', 'Livrare integrala', 'Unitate masura', 'Cod produs client', 'NR. extern CC', 'Data comanda client', 'Nr. comanda furnizor atribuit', 
@@ -969,7 +973,9 @@ def mainpage(role):
     #pivot_ccd = pd.pivot_table(df_ccd, values=['Cantitate restanta', 'Valoare restanta'], index=['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], columns=['Status comanda'], aggfunc=np.sum)
     pivot_ccd = df_ccd.pivot_table(df_ccd[['Cantitate restanta', 'Valoare restanta']], index=['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], aggfunc=np.sum)
     #pivot_ccd.loc['Grand Total']= df_ccd[['Cantitate restanta', 'Valoare restanta']].sum()
-    pivot_ccd.loc[('','','','','','','','','','','','','','','','','','','','','Grand Total'), :] = df_ccd[['Cantitate restanta', 'Valoare restanta']].sum()
+    #table2.loc['Grand Total'] = table2.sum(numeric_only=True, axis=0)
+    #pivot_ccd.loc['Grand Total'] = pivot_ccd.sum(numeric_only=True, axis=0)
+    #pivot_ccd.loc[('','','','','','','','','','','','','','','','','','','','','Grand Total'), :] = df_ccd[['Cantitate restanta', 'Valoare restanta']].sum()
     #st.write(pivot_ccd)
 
     #st.header("Comenzile per key accounts si status - se copiaza acum in excel in output folder")
@@ -983,15 +989,16 @@ def mainpage(role):
     #groupedcc.sort_values(by=['KA','Cod client', 'Nume client', 'Nr. intern CC', 'Numar pozitie', 'NR. extern CC', 'Persoana de contact', 'Status comanda', 'RESTRICTII', 'Data creere', 'Data livrare', 'Depozit', 'Cod produs','Denumire', 'Unitate masura', 'Cod produs client', 'Zile intarziere','Cea mai veche CF', 'Data Confirmare CF', 'Data livrare CF', 'Furnizor'], inplace=True, ascending=False)
     
     #groupedcc.to_excel("output/de control/Status CC de copiat.xlsx", index=False)
-    pivot_ccd.to_excel("output/de control/Status CC de copiat - pivot.xlsx", index=True)
+    pivot_ccd.reset_index(inplace=True)
+    pivot_ccd.to_excel("output/de control/Status CC de copiat - pivot.xlsx", index=False)
     #st.write(groupedcc)
     #groupedccP.to_excel("output/Status CC de copiat var2.xlsx", index=False)
 
     pivot_statccF = pd.read_excel('output/de control/Status CC de copiat - pivot.xlsx')
     #########!!! Output Comenzi Furnizori Completa !!! add formatting #########
     pivot_statccF_formatted = pivot_statccF.copy(deep=True)
-    pivot_statccF_formatted['Cea mai veche CF'] = pivot_statccF_formatted['Cea mai veche CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CF') else x)
-    pivot_statccF_formatted['Data Confirmare CF'] = pivot_statccF_formatted['Data Confirmare CF'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
+    pivot_statccF_formatted['Cea mai veche CF'] = pivot_statccF_formatted['Cea mai veche CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x)  and x!=' 'and x!='' and x!='FARA CF') else x)
+    pivot_statccF_formatted['Data Confirmare CF'] = pivot_statccF_formatted['Data Confirmare CF'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!=''  and x!=' 'and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
     pivot_statccF_formatted['Data livrare CF'] = pivot_statccF_formatted['Data livrare CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!=' ' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
     pivot_statccF_formatted['Data livrare'] = pivot_statccF_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
     pivot_statccF_formatted['Cantitate restanta'] = pivot_statccF_formatted['Cantitate restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
@@ -1054,15 +1061,19 @@ def mainpage(role):
     # create index pentu join
     #df_stocmin.set_index('Depozit' ,'Cod produs')
     pcc['Legatura']=pcc['Depozit'].str.strip() + pcc['Lieferartikel'].str.strip()
-    
+    pcc.to_excel("output/pcc cu legatura.xlsx", index=False)
     df_stocmin=df_stocmin.join(pcc.set_index('Legatura'), on='Legatura', rsuffix='_pcc')
     df_stocmin.fillna(value={'Cantitate restanta': 0}, inplace=True)
     df_stocmin.rename(columns={'Cantitate restanta':'Cant deschisa in CC - din CC deschise'}, inplace=True)
-    
+    df_stocmin.to_excel("output/Stocmin - join pcc.xlsx", index=False)
     #df_stocmin.set_index('Depozit' ,'Cod produs')
     #pcf['Legatura']=pcf['Depozit'].str.strip() + pcf['Cod PIO'].str.strip()
     #pcf.set_index('Depozit', 'Cod PIO')
-
+    inner_join = pd.merge(df_stocmin, 
+                      pcc, 
+                      on ='Legatura', 
+                      how ='left')
+    inner_join.to_excel("output/Stocmin_pcc inner.xlsx", index=False)
     df_stocmin=df_stocmin.join(pcf.set_index('Legatura Depozit'), on='Legatura', rsuffix='_pcf')
     df_stocmin.fillna(value={'Cantitate restanta': 0}, inplace=True)
     df_stocmin.rename(columns={'Cantitate restanta':'Cantitate in CF - din CF deschise'}, inplace=True)
@@ -1074,18 +1085,18 @@ def mainpage(role):
     df_stock['Legatura']=df_stock['Depozit'].str.strip() + df_stock['Cod produs'].str.strip()
     df_stocmin=df_stocmin.join(df_stock.set_index('Legatura'), on='Legatura', rsuffix='_pcf')
     
-    df_stocmin.drop(['Depozit_pcf', 'Cod produs', 'Descriere', 'UM_pcf', 'Stoc disponibil', 'Cant. Rezervata', 'Cantitate in Comenzi clienti','Cantitate in Comenzi furnizori', 'Categ. Pret vanzare',
+    df_stocmin.drop(['Depozit_pcf', 'Cod produs', 'Descriere', 'UM_pcf', 'Cant. Rezervata', 'Cantitate in Comenzi clienti','Cantitate in Comenzi furnizori', 'Categ. Pret vanzare',
     'Pret mediu de achizitie', 'Valoare marfa disponibila', 'Valoare marfa fizica',  'Categorie pret / descriere', 'Pret lista', 
     'Data ultima iesire', 'Data ultima intrare', 'Furnizor principal', 'Grupa produse'], axis=1, inplace=True)
-    df_stocmin.fillna(value={'Stoc fizic': 0}, inplace=True)
-    df_stocmin.rename(columns={'Stoc fizic':'Stoc actual / depozit din stocuri'}, inplace=True)
+    df_stocmin.fillna(value={'Stoc disponibil': 0}, inplace=True)
+    df_stocmin.rename(columns={'Stoc disponibil':'Stoc disponibil / depozit'}, inplace=True)
     convert_dict ={'Medie zilnica an curent':np.float32, 'Stoc minim / depozit': np.float32, 'Medie lunara an curent':np.float32, 'Medie lunara an precedent':np.float32, 
     'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC':np.datetime64, 'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC':np.datetime64,
-    'Cant deschisa in CC - din CC deschise': np.float32, 'Cantitate in CF - din CF deschise': np.float64,'Stoc actual / depozit din stocuri': np.float32}
+    'Cant deschisa in CC - din CC deschise': np.float32, 'Cantitate in CF - din CF deschise': np.float64,'Stoc disponibil / depozit': np.float32}
     df_stocmin = df_stocmin.astype(convert_dict)
 
     df_stocmin['Zile acoperite de stoc'] = np.where(df_stocmin['Medie zilnica an curent']!=0, 
-    np.round((df_stocmin['Stoc actual / depozit din stocuri']-df_stocmin['Cantitate in CF - din CF deschise'])/df_stocmin['Medie zilnica an curent']),"FARA RULAJ AN CURENT")
+    np.round((df_stocmin['Stoc disponibil / depozit']-df_stocmin['Cant deschisa in CC - din CC deschise'])/df_stocmin['Medie zilnica an curent']),"FARA RULAJ AN CURENT")
 
     df_stocmin['Zile pana la livrare CF'] = np.where(df_stocmin['Cantitate in CF - din CF deschise']!=0, 
     (pd.to_datetime(df_stocmin['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC'])-pd.to_datetime(data_referinta)).apply(lambda x: x.days),-1000)
@@ -1093,21 +1104,21 @@ def mainpage(role):
     df_stocmin['Status']=''
     for index in range(len(df_stocmin)): 
         if (df_stocmin['Cant deschisa in CC - din CC deschise'].iloc[index] > 0):
-            if (df_stocmin['Stoc actual / depozit din stocuri'].iloc[index] == 0):
+            if (df_stocmin['Stoc disponibil / depozit'].iloc[index] == 0):
                 df_stocmin['Status'].iloc[index] = "00 - Produs cu CC si fara stoc"
             else: 
-                if (df_stocmin['Stoc actual / depozit din stocuri'].iloc[index] >= df_stocmin['Cant deschisa in CC - din CC deschise'].iloc[index]+df_stocmin['Stoc minim / depozit'].iloc[index]):
+                if (df_stocmin['Stoc disponibil / depozit'].iloc[index] >= df_stocmin['Cant deschisa in CC - din CC deschise'].iloc[index]+df_stocmin['Stoc minim / depozit'].iloc[index]):
                     df_stocmin['Status'].iloc[index] = "10-SA acopera CC si SM"
                 else: 
-                    if (df_stocmin['Stoc actual / depozit din stocuri'].iloc[index] >= df_stocmin['Cant deschisa in CC - din CC deschise'].iloc[index]):
+                    if (df_stocmin['Stoc disponibil / depozit'].iloc[index] >= df_stocmin['Cant deschisa in CC - din CC deschise'].iloc[index]):
                         df_stocmin['Status'].iloc[index] = "02-SA acopera CC dar nu acopera SM"
                     else:
                         df_stocmin['Status'].iloc[index] = "01-SA nu acopera CC"
         else:
-            if (df_stocmin['Stoc actual / depozit din stocuri'].iloc[index] >= df_stocmin['Stoc minim / depozit'].iloc[index]):
+            if (df_stocmin['Stoc disponibil / depozit'].iloc[index] >= df_stocmin['Stoc minim / depozit'].iloc[index]):
                 df_stocmin['Status'].iloc[index] = "09-SA acopera SM"
             else: 
-                if (df_stocmin['Stoc actual / depozit din stocuri'].iloc[index] == 0):
+                if (df_stocmin['Stoc disponibil / depozit'].iloc[index] == 0):
                     if (df_stocmin['Zile pana la livrare CF'].iloc[index] < 0):
                         df_stocmin['Status'].iloc[index] = "03-Fara SA si CF intarziate sau fara CF"
                     else: 
@@ -1116,10 +1127,17 @@ def mainpage(role):
                     df_stocmin['Status'].iloc[index] = "05- SA nu acopera SM - Verificare zile acoperite de stoc"
 
 
-    df_stocmin = df_stocmin[['Depozit', 'Cod PIO', 'Descriere produs', 'UM', 'Stoc minim / depozit', 'Medie zilnica an curent', 'Medie lunara an curent', 'Medie lunara an precedent', 'Cant deschisa in CC - din CC deschise', 'Stoc actual / depozit din stocuri', 'Cantitate in CF - din CF deschise', 'Zile acoperite de stoc', 'Zile pana la livrare CF', 'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC', 'Numar CF deschise - din CF deschise', 'Data confirmare cea mai veche CF - din lucru supplier - status pt. CC', 'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC', 'Status', 'Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC']]
+    df_stocmin = df_stocmin[['Depozit', 'Cod PIO', 'Descriere produs', 'UM', 'Stoc minim / depozit', 'Medie zilnica an curent', 'Medie lunara an curent', 'Medie lunara an precedent', 'Cant deschisa in CC - din CC deschise', 'Stoc disponibil / depozit', 'Cantitate in CF - din CF deschise', 'Zile acoperite de stoc', 'Zile pana la livrare CF', 'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC', 'Numar CF deschise - din CF deschise', 'Data confirmare cea mai veche CF - din lucru supplier - status pt. CC', 'data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC', 'Status', 'Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC']]
     #st.dataframe(df_smc4)
     #df_smc4_to_display=df_stocmin.copy(deep=True)
     #niceGrid(df_smc4_to_display)
+
+    #remove duplicates based on 'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC' - imi trebuie cea mai veche
+    df_stocmin.sort_values(['Depozit', 'Cod PIO', 'Data emitere cea mai veche CF  - din lucru supplier - status pt. CC'], inplace=True)
+    df_stocmin.drop_duplicates(subset=['Depozit', 'Cod PIO'], keep="first", inplace=True)
+    
+
+
     df_stocmin = df_stocmin.sort_values(['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'])
     df_stocmin.to_excel("output/de control/Situatie SM final.xlsx")
 
@@ -1137,7 +1155,7 @@ def mainpage(role):
     df_formatted['Medie lunara an curent'] = df_formatted['Medie lunara an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     df_formatted['Medie lunara an precedent'] = df_formatted['Medie lunara an precedent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     df_formatted['Cant deschisa in CC - din CC deschise'] = df_formatted['Cant deschisa in CC - din CC deschise'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
-    df_formatted['Stoc actual / depozit din stocuri'] = df_formatted['Stoc actual / depozit din stocuri'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
+    df_formatted['Stoc disponibil / depozit'] = df_formatted['Stoc disponibil / depozit'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     df_formatted['Cantitate in CF - din CF deschise'] = df_formatted['Cantitate in CF - din CF deschise'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     df_formatted['Data emitere cea mai veche CF  - din lucru supplier - status pt. CC'] = df_formatted['Data emitere cea mai veche CF  - din lucru supplier - status pt. CC'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CF') else x)
     df_formatted['Data confirmare cea mai veche CF - din lucru supplier - status pt. CC'] = df_formatted['Data confirmare cea mai veche CF - din lucru supplier - status pt. CC'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
@@ -1151,7 +1169,8 @@ def mainpage(role):
 
     
     pivot_centralizator = df_ccd.groupby(['Cod client', 'Nume client', 'Status comanda']).aggregate({'Valoare restanta':'sum'})
-    pivot_centralizator.to_excel("output/Status comenzi clienti Centralizator.xlsx")
+    pivot_centralizator.reset_index(inplace=True)
+    pivot_centralizator.to_excel("output/Status comenzi clienti Centralizator.xlsx", index=False)
     #citeste-l inapoi ca sa-l poti afisa OK
     pivot_centralizator=pd.read_excel("output/Status comenzi clienti Centralizator.xlsx")
     pivot_centralizator['Valoare restanta'] = pivot_centralizator['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
