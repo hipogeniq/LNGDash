@@ -4,10 +4,15 @@ cookie:
   name: some_cookie_name
 credentials:
   usernames:
+    ana:
+      email: ana@lingemann.ro
+      name: Ana Einkauf 01
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: achizitii
     catar:
       email: cata.ristache@gmail.com
       name: Cata Ristache
-      password: $2b$12$O12cSDEh9AIGv7ZcvMt2XOf3iQRojozx4hVxaxnyS3GEj8I0Ri1rK
+      password: $2b$12$jk2HA5UihntJE8huOHSaf.A31a209qbishfSSg5t/8Pkeh8rTzObS
       role: admin
     dsaramet:
       email: d.saramet@lingemann-koeln.de
@@ -19,36 +24,35 @@ credentials:
       name: Dan Taropa
       password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
       role: full_access
-    rmunteanu:
-      email: r.munteanu@lingemann.ro
-      name: Remus Munteanu
-      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: admin
-    raul:
-      email: r.priboi@lingemann.ro
-      name: Raul Priboi
-      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: ka
-    raul:
-      email: r.priboi@lingemann.ro
-      name: Raul Priboi
-      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: ka
-    victor:
-      email: victor@lingemann.ro
-      name: Victor Key Account
-      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: ka
-    ana:
-      email: ana@lingemann.ro
-      name: Ana Einkauf 01
-      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: achizitii
+    gogu:
+      email: gogu@lingemann.ro
+      name: Gogu al scroafei
+      password: $2b$12$RLVw4to4mENshEzoWqS5s.Hxp976B55frp/YAidV01Xh2LWYDP13m
     matei:
       email: matei@lingemann.ro
       name: Matei Einkauf 02
       password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
       role: achizitii
+    a.daniel:
+      email: a.daniel@lingemann.ro
+      name: A. Daniel 
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: achizitii
+    raul:
+      email: r.priboi@lingemann.ro
+      name: Raul Priboi
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: ka
+    rmunteanu:
+      email: r.munteanu@lingemann.ro
+      name: Remus Munteanu
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: admin
+    victor:
+      email: victor@lingemann.ro
+      name: Victor Key Account
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: ka
 preauthorized:
   emails:
   - catalin.ristache@gmail.com
