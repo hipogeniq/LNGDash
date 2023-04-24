@@ -13,22 +13,42 @@ credentials:
       email: d.saramet@lingemann-koeln.de
       name: Dorin Saramet
       password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: manager
+      role: full_access
     dtaropa:
       email: d.taropa@lingemann.ro
       name: Dan Taropa
       password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: manager
+      role: full_access
     rmunteanu:
       email: r.munteanu@lingemann.ro
       name: Remus Munteanu
       password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
       role: admin
-    rpriboi:
+    raul:
       email: r.priboi@lingemann.ro
       name: Raul Priboi
       password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
-      role: vanzari
+      role: ka
+    raul:
+      email: r.priboi@lingemann.ro
+      name: Raul Priboi
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: ka
+    victor:
+      email: victor@lingemann.ro
+      name: Victor Key Account
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: ka
+    ana:
+      email: ana@lingemann.ro
+      name: Ana Einkauf 01
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: achizitii
+    matei:
+      email: matei@lingemann.ro
+      name: Matei Einkauf 02
+      password: $2b$12$bJQ8EScy8umrI3cM.B/54eXq8hnZsDsAhuMFpZC.SqsLtfjDQWy1i
+      role: achizitii
 preauthorized:
   emails:
   - catalin.ristache@gmail.com

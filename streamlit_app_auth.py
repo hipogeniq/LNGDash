@@ -156,9 +156,20 @@ def mainpage(role, name):
     df_stock = pd.read_excel('input/002_Stock value_RO.xlsx', skiprows=1, skipfooter=1, converters={'erweiterter Lagerbegriff': str})
     df_stocmin = pd.read_excel('input/002_Stocuri minime dep. principale.xlsx', skiprows=1, skipfooter=1, converters={'erweiterter Lagerbegriff': str, 'Bezeichnung': str, 'Verpackungseinheit': str})
     df_ka = pd.read_excel('input/002_Clienti - KA.xlsx')
-    #df_access = pd.read_excel('input/002_MapAccess.xlsx')
-    #filtru_access_depozit = st.multiselect(ia din df_access si seteaza vizibilitatea pe false)
-
+    df_access = pd.read_excel('input/002_UseriAccess.xlsx')
+    
+    #filtru_access_depozit = st.multiselect(ia din df_access si seteaza vizibilitatea pe false) - ia toate depozitele din df_ccd
+    if (role=="admin") or (role=="achizitii") or (role=="full_access"):
+        list_whsAll = list(df_ccd.groupby('Depozit').groups.keys())
+        list_clientiAll = list(df_ccd.groupby('Nume client').groups.keys())
+        list_furnizoriAll = list(df_ccf.groupby('Furnizor').groups.keys())
+        MF01, MF02, MF03 = st.columns(3)
+        with MF01:
+            selectDepozit = st.multiselect("Depozite: ", options=list_whsAll, default=list_whsAll)
+        with MF02:
+            selectDepozit = st.multiselect("Clienti: ", options=list_whsAll, default=list_clientiAll)
+        with MF03:
+            selectDepozit = st.multiselect("Furnizori: ", options=list_whsAll, default=list_furnizoriAll)
     
     ##############################################################
     #rename first to match the 2023 column names
@@ -341,6 +352,7 @@ def mainpage(role, name):
     df_ccd_formatted['Data comanda client'] = df_ccd_formatted['Data comanda client'].dt.strftime('%d/%m/%Y')
 
     if role=="admin": 
+        #[01]
         st.header("Comenzi clienti deschise")
         niceGrid(df_ccd_formatted)
     #%%#############################################################
@@ -368,8 +380,9 @@ def mainpage(role, name):
     pcc = pcc.dropna(subset=['Lieferartikel'])
     pcc1=pcc.sort_values('Cantitate restanta',ascending=False).head(10)
 
-    if (role=="admin") or (role=="manager"):
-        st.header("RAPORT SENIOR MANAGEMENT - Comenzi Clienti - cantitati restante")
+    if role=="admin":
+        #[02]
+        st.header("Stocuri Minime - Comenzi Clienti - cantitati restante")
         col5, col6 = st.columns((1,1))
         with col5:
             niceGrid(rcc_formatted)
@@ -490,6 +503,7 @@ def mainpage(role, name):
     df_formatted['Data livrare'] = df_formatted['Data livrare'].dt.strftime('%d/%m/%Y')
 
     if role=="admin":
+        #[03]
         st.header("Comenzi furnizori deschise")
         niceGrid(df_formatted)
     #%%#############################################################
@@ -532,6 +546,7 @@ def mainpage(role, name):
     df_formatted['Data livrare 3'] = df_formatted['Data livrare 3'].dt.strftime('%d/%m/%Y')
 
     if role=="admin":
+        #[04]
         st.header("Confirmari Comenzi Furnizori")
         niceGrid(df_formatted)
 
@@ -584,6 +599,7 @@ def mainpage(role, name):
     df_formatted['Data ultima intrare'] = df_formatted['Data ultima intrare'].dt.strftime('%d/%m/%Y')
     
     if role=="admin":
+        #[05]
         st.header("Valori stocuri")
         niceGrid(df_formatted)
     #%%#############################################################
@@ -631,6 +647,7 @@ def mainpage(role, name):
     df_formatted['Cantitate an curent'] = df_formatted['Cantitate an curent'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
 
     if role=="admin":
+        #[06]
         st.header("Stocuri minime")
         niceGrid(df_formatted)
     #%%#############################################################
@@ -722,7 +739,8 @@ def mainpage(role, name):
 
     df_cfi_display=df_cfi.sort_values('Zile intarziere',ascending=False).head(10)
     
-    if (role=="admin") or (role=="vanzari"):
+    if role=="admin":
+        #[07]
         st.header("Status Comenzi Furnizori Intarziate")
         col5, col6 = st.columns((4,1))
         with col5:
@@ -803,7 +821,8 @@ def mainpage(role, name):
     #df_out_CF = df_out_CF.sort_values(by=['Data comenzii'], inplace=True)
     df_out_CF.to_excel("output/Situatie Comenzi Furnizori Completa.xlsx")
 
-    if (role=="admin") or (role=="vanzari"):
+    if (role=="admin") or (role=="achizitii") or (role=="full_access"):
+        #[08]
         st.header("Situatie Comenzi Furnizori Completa")
         niceGrid(df_out_CF)
     ###########################################################
@@ -813,7 +832,7 @@ def mainpage(role, name):
     ############## RAPORT SENIOR MANAGEMENT - Comenzi Furnizori - cantitati restante ###############
     #%%=======================================================
 
-    st.header("RAPORT SENIOR MANAGEMENT - Comenzi Furnizori - cantitati restante")
+    
 
     #rcf=df_cfcc.groupby(['Depozit','Cod PIO'])
     #rcf=rcf.apply(lambda x: x) 
@@ -836,7 +855,9 @@ def mainpage(role, name):
     pcf = pcf.dropna(subset=['Legatura Depozit'])
     rcf_todisplay=pcf.sort_values('Cantitate restanta',ascending=False).head(10)
     
-    if (role=="admin") or (role=="manager"):
+    if role=="admin":
+        #[09]
+        st.header("Stocuri Minime - Comenzi Furnizori - cantitati restante")
         col5, col6 = st.columns((2,1))
         with col5:
             niceGrid(rcf_formatted)
@@ -952,6 +973,7 @@ def mainpage(role, name):
 
     df_ccd.to_excel("output/de control/Lucru CC.xlsx")
     if role=="admin":
+        #[10]
         st.header("Lucru CC - Comenzi clienti in raport cu ce am dp la furnizori")
         niceGrid(df_ccd_formatted)
 
@@ -1007,7 +1029,8 @@ def mainpage(role, name):
 
 
     # st.write(pivot_statccF)
-    if (role=="admin") or (role=="vanzari"):
+    if (role=="admin") or (role=="ka") or (role=="full_access"):
+        #[11]
         st.header("Status Comenzi Clienti Completa")
         niceGrid(pivot_statccF_formatted) 
     #     niceGrid(df_formatted)
@@ -1161,7 +1184,8 @@ def mainpage(role, name):
     df_formatted['Data confirmare cea mai veche CF - din lucru supplier - status pt. CC'] = df_formatted['Data confirmare cea mai veche CF - din lucru supplier - status pt. CC'].apply(lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
     df_formatted['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC'] = df_formatted['data livrare pt. cea mai veche CF - din lucru supplier - status pt. CC'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x) and x!='' and x!='FARA CONFIRMARE' and x!='FARA COMANDA CLIENT') else x)
 
-    if (role=="admin") or (role=="vanzari"):
+    if (role=="admin") or (role=="vanzari") or (role=="ka") or (role=="full_access"):
+        #[12]
         st.header("Situatie Stocuri Minime Completa")
         niceGrid(df_formatted)
     ###########################################################
@@ -1175,7 +1199,8 @@ def mainpage(role, name):
     pivot_centralizator=pd.read_excel("output/Status comenzi clienti Centralizator.xlsx")
     pivot_centralizator['Valoare restanta'] = pivot_centralizator['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
     
-    if (role=="admin") or (role=="vanzari") or (role=="manager"):
+    if (role=="admin") or (role=="full_access"):
+        #[13]
         st.header("Centralizator comenzi clienti")
         niceGrid(pivot_centralizator)
 
