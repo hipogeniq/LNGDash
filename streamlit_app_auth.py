@@ -147,8 +147,12 @@ def mainpage(role, name, username):
  
     #pd.options.display.precision = 2
     #pd.options.display.float_format = '{:,.2f}'.format
+    if (role=="ka"): 
+        user = username.capitalize() 
+    else: 
+        user = username
 
-    pageContent(role,name, username.capitalize())
+    pageContent(role,name,user)
 
     # with st.form(key="form"):
     #     submit_button = st.form_submit_button(label="Incarca Datele/ Aplica Filtrele")
@@ -1005,20 +1009,20 @@ def pageContent(role, name, username):
         #[11]
         list_status=['INTARZIATA', 'IN TERMEN', 'LIVRARE IN SAPTAMANA ACEASTA', 'LIVRARE SAPTAMANA URMATOARE']
         list_whsUser = list(df_access.query('User==@username').groupby('Depozit').groups.keys())
-        list_clientiUser = list(pivot_statccF.groupby('Nume_client').groups.keys())
-        list_furnizoriUser = list(pivot_statccF.groupby('Furnizor').groups.keys())
+        list_clientiUser = list(pivot_statccF.query('Depozit in @list_whsUser').groupby('Nume_client').groups.keys())
+        list_furnizoriUser = list(pivot_statccF.query('Depozit in @list_whsUser').groupby('Furnizor').groups.keys())
         if role == "achizitii":
-            v01, v02, v03 = st.columns(3)
+            v01, v02= st.columns(2)
             with v01:
                 selectDepozit = st.multiselect("Depozite: ", options=list_whsUser, default=list_whsUser)
             with v02:
-                selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriUser, default=list_furnizoriUser)
-            with v03:
                 selectStatus  = st.multiselect("Status: ", options=list_status, default=list_status)
+            selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriUser, default=list_furnizoriUser)
             pivot_statccF=pivot_statccF.query("Status_comanda == @selectStatus & Depozit == @selectDepozit & Furnizor == @selectFurnizori")
         else:
             if role == "ka":
-                #list_furnizoriUser = list(df_cfd.groupby('Nume_furnizor').groups.keys())
+                list_clientiUser = list(pivot_statccF.query('Depozit in @list_whsUser & KA == @username').groupby('Nume_client').groups.keys())
+                list_furnizoriUser = list(pivot_statccF.query('Depozit in @list_whsUser & KA == @username').groupby('Furnizor').groups.keys())
                 ka01, ka02, ka03 = st.columns(3)
                 with ka01:
                     selectDepozit = st.multiselect("Depozite: ", options=list_whsUser, default=list_whsUser)
