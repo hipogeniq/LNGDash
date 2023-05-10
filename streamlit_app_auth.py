@@ -106,6 +106,7 @@ def check_user():
         st.warning('Please enter your username and password')
     return current_user
 ################### A NEW GRID DISPLAY #######################
+
 def niceGrid(dataset):
     gb = GridOptionsBuilder.from_dataframe(dataset)
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=1000) #Add pagination
@@ -135,6 +136,7 @@ def niceGrid(dataset):
     return df
 
 #################### MAIN PAGE CONTENT ##########################################
+
 def mainpage(role, name, username): 
     
     #this is for formatting the numeric fields to 999.999,99
@@ -549,25 +551,25 @@ def pageContent(role, name, username):
     #%%=======================================================
     
     #filtru_access_depozit = st.multiselect(ia din df_access si seteaza vizibilitatea pe false) - ia toate depozitele din df_ccd
-    if (role=="admin") or (role=="full_access"):
-        list_whsAll = list(df_ccd.groupby('Depozit').groups.keys())
-        list_clientiAll = list(df_ccd.groupby('NumeF').groups.keys())
-        list_furnizoriAll = list(df_cfd.groupby('Nume_furnizor').groups.keys())
-        MF01, MF02, MF03 = st.columns(3)
-        with MF01:
-            selectDepozit = st.multiselect("Depozite: ", options=list_whsAll, default=list_whsAll)
-        with MF02:
-            selectClienti = st.multiselect("Clienti: ", options=list_clientiAll, default=list_clientiAll)
-        with MF03:
-            selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriAll, default=list_furnizoriAll)
+    # if (role=="admin") or (role=="full_access"):
+    #     list_whsAll = list(df_ccd.groupby('Depozit').groups.keys())
+    #     list_clientiAll = list(df_ccd.groupby('NumeF').groups.keys())
+    #     list_furnizoriAll = list(df_cfd.groupby('Nume_furnizor').groups.keys())
+    #     MF01, MF02, MF03 = st.columns(3)
+    #     with MF01:
+    #         selectDepozit = st.multiselect("Depozite: ", options=list_whsAll, default=list_whsAll, label_visibility="collapsed", disabled=True)
+    #     with MF02:
+    #         selectClienti = st.multiselect("Clienti: ", options=list_clientiAll, default=list_clientiAll, label_visibility="collapsed", disabled=True)
+    #     with MF03:
+    #         selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriAll, default=list_furnizoriAll, label_visibility="collapsed", disabled=True)
     
     
-    # apply filters on main dataframes for admin and full_access; achizitii and ka will have individual filters
-    if (role=="admin") or (role=="full_access"):
-        df_ccd=df_ccd.query("Depozit == @selectDepozit & NumeF == @selectClienti")
-        df_cfd=df_cfd.query("Depozit == @selectDepozit & Nume_furnizor == @selectFurnizori")
-        df_stock=df_stock.query("Depozit == @selectDepozit")
-        df_stocmin=df_stocmin.query("Depozit == @selectDepozit")
+    # # apply filters on main dataframes for admin and full_access; achizitii and ka will have individual filters
+    # if (role=="admin") or (role=="full_access"):
+    #     df_ccd=df_ccd.query("Depozit == @selectDepozit & NumeF == @selectClienti")
+    #     df_cfd=df_cfd.query("Depozit == @selectDepozit & Nume_furnizor == @selectFurnizori")
+    #     df_stock=df_stock.query("Depozit == @selectDepozit")
+    #     df_stocmin=df_stocmin.query("Depozit == @selectDepozit")
 
     #data frame formated for display - create a copy because it may also change the column types and mess up further calculations
     # formatat Comenzi Clienti Deschise
@@ -1012,29 +1014,31 @@ def pageContent(role, name, username):
         list_clientiUser = list(pivot_statccF.query('Depozit in @list_whsUser').groupby('Nume_client').groups.keys())
         list_furnizoriUser = list(pivot_statccF.query('Depozit in @list_whsUser').groupby('Furnizor').groups.keys())
         if role == "achizitii":
-            v01, v02= st.columns(2)
-            with v01:
-                selectDepozit = st.multiselect("Depozite: ", options=list_whsUser, default=list_whsUser)
-            with v02:
-                selectStatus  = st.multiselect("Status: ", options=list_status, default=list_status)
-            selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriUser, default=list_furnizoriUser)
-            pivot_statccF=pivot_statccF.query("Status_comanda == @selectStatus & Depozit == @selectDepozit & Furnizor == @selectFurnizori")
+            # v01, v02= st.columns(2)
+            # with v01:
+            #     selectDepozit = st.multiselect("Depozite: ", options=list_whsUser, default=list_whsUser, label_visibility="collapsed", disabled=True)
+            # with v02:
+            #     selectStatus  = st.multiselect("Status: ", options=list_status, default=list_status, label_visibility="collapsed", disabled=True)
+            # selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriUser, default=list_furnizoriUser, label_visibility="collapsed", disabled=True)
+            #pivot_statccF=pivot_statccF.query("Status_comanda == @selectStatus & Depozit == @selectDepozit & Furnizor == @selectFurnizori", disabled=True)
+            pivot_statccF=pivot_statccF.query("Depozit in @list_whsUser & Furnizor in @list_furnizoriUser")
         else:
             if role == "ka":
                 list_clientiUser = list(pivot_statccF.query('Depozit in @list_whsUser & KA == @username').groupby('Nume_client').groups.keys())
                 list_furnizoriUser = list(pivot_statccF.query('Depozit in @list_whsUser & KA == @username').groupby('Furnizor').groups.keys())
-                ka01, ka02, ka03 = st.columns(3)
-                with ka01:
-                    selectDepozit = st.multiselect("Depozite: ", options=list_whsUser, default=list_whsUser)
-                with ka02:
-                    selectClienti = st.multiselect("Clienti: ", options=list_clientiUser, default=list_clientiUser)
-                with ka03:
-                    selectStatus  = st.multiselect("Status: ", options=list_status, default=list_status)
-                selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriUser, default=list_furnizoriUser)
-                pivot_statccF=pivot_statccF.query("KA == @username & Status_comanda == @selectStatus & Depozit == @selectDepozit & Nume_client == @selectClienti & Furnizor == @selectFurnizori")
+                # ka01, ka02, ka03 = st.columns(3)
+                # with ka01:
+                #     selectDepozit = st.multiselect("Depozite: ", options=list_whsUser, default=list_whsUser, label_visibility="collapsed", disabled=True)
+                # with ka02:
+                #     selectClienti = st.multiselect("Clienti: ", options=list_clientiUser, default=list_clientiUser, label_visibility="collapsed", disabled=True)
+                # with ka03:
+                #     selectStatus  = st.multiselect("Status: ", options=list_status, default=list_status, label_visibility="collapsed", disabled=True)
+                # selectFurnizori = st.multiselect("Furnizori: ", options=list_furnizoriUser, default=list_furnizoriUser, label_visibility="collapsed", disabled=True)
+                #pivot_statccF=pivot_statccF.query("KA == @username & Status_comanda == @selectStatus & Depozit == @selectDepozit & Nume_client == @selectClienti & Furnizor == @selectFurnizori")
+                pivot_statccF=pivot_statccF.query("KA == @username & Depozit in @list_whsUser & Nume_client in @list_clientiUser & Furnizor in @list_furnizoriUser")
 
 
-        
+    
         #########!!! Output Comenzi Furnizori Completa !!! add formatting #########
         pivot_statccF_formatted = pivot_statccF.copy(deep=True)
         pivot_statccF_formatted['Cea mai veche CF'] = pivot_statccF_formatted['Cea mai veche CF'].apply(lambda x: x.strftime('%d/%m/%Y') if (not pd.isnull(x)  and x!=' 'and x!='' and x!='FARA CF') else x)
@@ -1045,14 +1049,17 @@ def pageContent(role, name, username):
         pivot_statccF_formatted['Valoare restanta'] = pivot_statccF_formatted['Valoare restanta'].map('{:,.2f}'.format).str.replace(",", "~").str.replace(".", ",").str.replace("~", ".")
         pivot_statccF_formatted['Data creere'] = pivot_statccF_formatted['Data creere'].dt.strftime('%d/%m/%Y')
 
-        st.header("Status Comenzi Clienti Completa")
-        niceGrid(pivot_statccF_formatted)
+        if (role=="admin") or (role=="ka") or (role=="full_access"):
+            st.header("Status Comenzi Clienti Completa")
+            niceGrid(pivot_statccF_formatted)
 
     #########!!! Output Comenzi Furnizori Completa !!!#########
-    if (role=="ka"):
+    if (role=="achizitii"):
+        #[08] inlocuit KA cu achizitii on May 8th 
         #list_furnizoriUser = list(df_cfcc.groupby('Furnizor').groups.keys())
         #selectFurnizori = st.multiselect("Furmizori: ", options=list_furnizoriUser, default=list_furnizoriUser)
-        df_cfcc=df_cfcc.query("Status_comanda == @selectStatus & Furnizor == @selectFurnizori")
+        df_cfcc=df_cfcc.query("Depozit in @list_whsUser")
+        
 
     df_out_CF = df_cfcc.copy(deep=True)
     df_out_CF = df_out_CF[['Cod PIO', 'KW data referinta', 'An referinta', 'KW data livrare', 'An livrare', 'Status', 'DC1', 'TL1', 'DC2', 'TL2', 'DC3', 'TL3', 'Status_comanda', 'Furnizor','Nr comanda','Pozitie', 'Cod Lingemann', 'Cod Furnizori / produs', 'Denumire produs', 'UM', 'Cantitate comanda', 'Cantitate restanta', 'Data comenzii',  'Data Confirmare CF', 'Data livrare', 'Zile intarziere', 'Adresa contact', 'Cel mai vechi termen de livrare catre client', 'Client', 'Stoc minim', 'Depozit']]
@@ -1077,8 +1084,8 @@ def pageContent(role, name, username):
     #df_out_CF = df_out_CF.sort_values(by=['Data comenzii'], inplace=True)
     df_out_CF.to_excel("output/Situatie Comenzi Furnizori Completa.xlsx")
 
-    if (role=="admin") or (role=="ka") or (role=="full_access"):
-        #[08]
+    if (role=="admin") or (role=="achizitii") or (role=="full_access"):
+        #[08] inlocuit KA cu achizitii on May 8th
         st.header("Situatie Comenzi Furnizori Completa")
         if (role=="admin"):
             niceGrid(df_out_CF)
@@ -1185,7 +1192,8 @@ def pageContent(role, name, username):
     df_stocmin.drop_duplicates(subset=['Depozit', 'Cod PIO'], keep="first", inplace=True)
     
     if (role=="achizitii") or (role=="ka"):
-        df_stocmin=df_stocmin.query("Depozit == @selectDepozit")
+        #df_stocmin=df_stocmin.query("Depozit == @selectDepozit")
+        df_stocmin=df_stocmin.query("Depozit in @list_whsUser")
 
     df_stocmin = df_stocmin.sort_values(['Furnizor pt. cea mai veche CF- din lucru supplier - status pt. CC'])
     df_stocmin.to_excel("output/de control/Situatie SM final.xlsx")
